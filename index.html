@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jurnal Trading Pro 6.0</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css">
+    <!-- jQuery -->
+    <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <!-- DataTables JS -->
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script>
+    
+    <style>
+        :root {
+            --bg-color: #0A0A10; --card-color: #1E1E1E; --primary-color: #333333;
+            --secondary-color: #00A8FF; --font-color: #E0E0E0; --font-color-muted: #888;
+            --border-color: #333333; --success-color: #28a745; --danger-color: #dc3545; --warning-color: #ffc107;
+        }
+
+        body.light-mode {
+            --bg-color: #F0F2F5; --card-color: #FFFFFF; --primary-color: #E4E6EB;
+            --font-color: #050505; --font-color-muted: #65676B; --border-color: #CED0D4;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif; background-color: var(--bg-color);
+            color: var(--font-color); margin: 0; font-size: 14px; transition: background-color 0.3s, color 0.3s;
+        }
+
+        .app-container { display: flex; flex-direction: column; min-height: 100vh; }
+        
+        .top-bar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 20px; background-color: var(--card-color); border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.3s, border-bottom 0.3s; position: sticky; top: 0; z-index: 1001;
+        }
+        .app-title { font-size: 1.2em; font-weight: 600; }
+        .app-title span { color: var(--secondary-color); }
+
+        .hamburger-menu { cursor: pointer; padding: 5px; z-index: 2001; }
+        .hamburger-menu .bar { display: block; width: 22px; height: 2px; margin: 5px auto; background-color: var(--font-color); transition: all 0.3s ease-in-out; }
+        .nav-sidebar {
+            position: fixed; top: 0; right: -250px; width: 250px; height: 100%;
+            background-color: var(--primary-color); box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+            transition: right 0.3s ease-in-out, background-color 0.3s; z-index: 2000; padding-top: 50px;
+        }
+        .nav-sidebar.active { right: 0; }
+        .nav-tab {
+            display: flex; align-items: center; gap: 15px; padding: 15px 20px; color: var(--font-color); cursor: pointer;
+            text-decoration: none; border-bottom: 1px solid var(--border-color); font-size: 0.9em;
+        }
+        .nav-tab:hover, .nav-tab.active { background-color: var(--secondary-color); font-weight: 600; }
+        
+        main { padding: 20px; flex-grow: 1; }
+        .page-content { display: none; }
+        .page-content.active { display: block; }
+
+        .grid-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; max-width: 1600px; margin: auto; }
+        .tools-container, .settings-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; max-width: 1200px; margin: auto; }
+
+        .card {
+            background-color: var(--card-color); border-radius: 8px; padding: 20px;
+            border: 1px solid var(--border-color); box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            display: flex; flex-direction: column; transition: background-color 0.3s, border 0.3s;
+            opacity: 0; transform: translateY(10px); animation: fadeIn 0.5s forwards;
+        }
+        
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 15px; }
+        .card h2 { margin: 0; color: var(--secondary-color); font-size: 1em; font-weight: 500; }
+        
+        .stat-card { text-align: center; }
+        .stat-card h3 { margin: 0 0 5px 0; font-size: 0.8em; color: var(--font-color-muted); text-transform: uppercase; }
+        .stat-card .value { font-size: 1.6em; font-weight: 600; }
+        
+        .pl-summary .pl-item { margin-bottom: 10px; }
+        .pl-summary h4 { margin: 0 0 4px 0; font-size: 0.8em; color: var(--font-color-muted); }
+        .pl-summary .pl-value { font-size: 1.2em; font-weight: 500; }
+
+        .button {
+            padding: 12px; background: linear-gradient(90deg, #00A8FF, #007BFF); color: white;
+            border: none; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 500;
+            transition: transform 0.2s, box-shadow 0.2s; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 168, 255, 0.2); }
+        .button.secondary { background: var(--primary-color); }
+        .button.secondary:hover { background: var(--secondary-color); }
+
+        .btn-detail { padding: 5px 10px; font-size: 0.75em; background: var(--primary-color); width: auto; }
+        .btn-detail:hover { background: var(--secondary-color); }
+
+        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; grid-column: 1 / -1; margin-bottom: 20px; }
+        .portfolio-section { grid-column: 1 / 4; }
+        .pl-section { grid-column: 4 / 5; }
+        .chart-section { grid-column: 1 / -1; }
+        .history-section { grid-column: 1 / -1; }
+
+        table.dataTable { width: 100% !important; border-collapse: collapse !important; table-layout: fixed; margin-top: 15px !important; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        th:first-child, td:first-child { width: 40px; text-align: center; padding: 10px 0; }
+        th { font-weight: 500; font-size: 0.8em; color: var(--font-color-muted); }
+        td { font-size: 0.9em; }
+        td.profit, .profit { color: var(--success-color); }
+        td.loss, .loss { color: var(--danger-color); }
+        tfoot td { font-weight: 600; border-top: 1px solid var(--border-color); }
+        .clickable-asset { cursor: pointer; text-decoration: underline; }
+        .clickable-asset:hover { color: var(--secondary-color); }
+        .action-buttons button { padding: 4px 8px; font-size: 0.7em; margin-right: 5px; }
+        .btn-edit { background: var(--warning-color); color: #000; border: none; }
+        .btn-delete { background: var(--danger-color); color: white; border: none; }
+        
+        .chart-container { display: flex; gap: 20px; height: 250px; }
+        .chart-wrapper { flex: 1; min-width: 0; }
+
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); align-items: center; justify-content: center; padding: 15px; box-sizing: border-box; }
+        .modal-content { background-color: var(--card-color); margin: auto; padding: 25px; border: 1px solid var(--border-color); width: 90%; max-width: 600px; border-radius: 8px; max-height: 90vh; display: flex; flex-direction: column; }
+        .modal-content.modal-lg { max-width: 900px; }
+        .modal-body { overflow-y: auto; padding-right: 10px; }
+        .modal-close { color: #aaa; align-self: flex-end; font-size: 24px; font-weight: bold; cursor: pointer; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .form-group { margin-bottom: 0; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        .form-group label { display: block; margin-bottom: 8px; font-size: 0.9em; font-weight: 500; }
+        input, select, textarea { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--primary-color); color: var(--font-color); box-sizing: border-box; font-size: 0.9em; font-family: 'Poppins', sans-serif; }
+        textarea { resize: vertical; min-height: 60px; }
+        
+        .fab {
+            position: fixed; bottom: 30px; right: 30px; width: 56px; height: 56px; border-radius: 50%;
+            background: linear-gradient(45deg, #00A8FF, #007BFF); color: white; display: flex; align-items: center; justify-content: center;
+            font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); cursor: pointer; z-index: 100; transition: transform 0.2s;
+        }
+        .fab:hover { transform: scale(1.1); }
+        
+        .heatmap-container { display: flex; flex-direction: column; align-items: center; }
+        .heatmap-nav { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
+        .heatmap-nav button { padding: 5px 10px; font-size: 1em; width: auto; }
+        .calendar-grid { width: 100%; }
+        .calendar-grid th { text-align: center; font-size: 0.8em; }
+        .calendar-grid td { text-align: center; height: 40px; border: 1px solid var(--border-color); background-color: var(--primary-color); position: relative; }
+        
+        .tools-buttons { display: flex; flex-direction: column; gap: 15px; }
+        .tools-buttons .button, .tools-buttons label { width: 100%; }
+        .import-instructions { font-size: 0.8em; color: var(--font-color-muted); margin-top: 20px; }
+        .import-instructions ul { padding-left: 20px; margin-top: 5px; }
+        .import-instructions li { margin-bottom: 5px; }
+
+        .pl-detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+        .pl-detail-card { background-color: var(--primary-color); padding: 15px; border-radius: 6px; cursor: pointer; transition: transform 0.2s; }
+        .pl-detail-card:hover { transform: translateY(-3px); }
+        .pl-detail-card h4 { margin: 0 0 10px 0; color: var(--secondary-color); border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
+        .pl-detail-card p { margin: 0; font-size: 1.2em; font-weight: 600; }
+        
+        .table-responsive-wrapper { overflow-x: auto; }
+        
+        .dataTables_wrapper { width: 100%; color: var(--font-color-muted) !important;}
+        .dataTables_length, .dataTables_filter, .dataTables_info, .dataTables_paginate { margin-bottom: 15px;}
+        .dataTables_wrapper select, .dataTables_wrapper input { color: var(--font-color) !important; background-color: var(--primary-color) !important; border: 1px solid var(--border-color) !important; }
+        .paginate_button { color: var(--font-color) !important; }
+        .paginate_button.current, .paginate_button.current:hover { background: var(--secondary-color) !important; color: white !important; border: 1px solid var(--secondary-color) !important; }
+        .paginate_button:hover { background: var(--primary-color) !important; border-color: var(--border-color) !important; }
+
+        @media (max-width: 1400px) { .grid-container, .stat-grid { grid-template-columns: repeat(4, 1fr); } }
+        @media (max-width: 900px) { .grid-container, .chart-container, .settings-container, .stat-grid, .tools-container { display: flex; flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="top-bar">
+            <div class="app-title">Jurnal<span>Trading</span></div>
+            <div class="hamburger-menu">
+                <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+            </div>
+        </div>
+        <nav id="nav-sidebar" class="nav-sidebar">
+            <a class="nav-tab active" data-tab="dashboard"><span>Dasbor</span></a>
+            <a class="nav-tab" data-tab="tools"><span>Perkakas</span></a>
+            <a class="nav-tab" data-tab="settings"><span>Pengaturan</span></a>
+            <a class="nav-tab" id="theme-toggle"><span id="theme-text">Mode Gelap</span></a>
+        </nav>
+
+        <main>
+            <div id="dashboard-page" class="page-content active">
+                <div class="grid-container">
+                    <div class="stat-grid">
+                        <div class="card stat-card" id="total-modal-card"><h3>Modal Aktif</h3><div class="value">-</div></div>
+                        <div class="card stat-card" id="rdn-cash-card"><h3>Kas di RDN</h3><div class="value">-</div></div>
+                        <div class="card stat-card" id="total-pl-card"><h3>Total P/L</h3><div class="value">-</div></div>
+                        <div class="card stat-card" id="win-rate-card"><h3>Win Rate</h3><div class="value">-</div></div>
+                        <div class="card stat-card" id="profit-factor-card"><h3>Profit Factor</h3><div class="value">-</div></div>
+                        <div class="card stat-card" id="avg-hold-card"><h3>Avg. Hold</h3><div class="value">-</div></div>
+                        <div class="card stat-card" id="best-trade-card"><h3>Best Trade</h3><div class="value profit">-</div></div>
+                        <div class="card stat-card" id="worst-trade-card"><h3>Trade Rugi</h3><div class="value loss">-</div></div>
+                    </div>
+                    
+                    <section class="card portfolio-section"><div class="card-header"><h2>Portofolio Saat Ini</h2></div><table id="portfolio-table"><thead><tr><th>Aset</th><th>#Beli</th><th>#Jual</th><th>Sisa Lot</th><th>Avg. Price</th><th>Modal</th></tr></thead><tbody></tbody><tfoot></tfoot></table></section>
+                    <section class="card pl-section"><div class="card-header"><h2>Ringkasan Realisasi</h2><button id="view-pl-detail-btn" class="button btn-detail">Detail</button></div><div class="pl-summary"><div class="pl-item"><h4>Total Untung</h4><div class="pl-value profit" id="total-profit-value">-</div></div><div class="pl-item"><h4>Total Rugi</h4><div class="pl-value loss" id="total-loss-value">-</div></div></div></section>
+                    <section class="card chart-section"><div class="card-header"><h2>Visualisasi Data</h2></div><div class="chart-container"><div class="chart-wrapper"><canvas id="equityChart"></canvas></div><div class="chart-wrapper"><canvas id="assetAllocationChart"></canvas></div></div></section>
+                    <section class="card history-section">
+                        <div class="card-header">
+                            <h2>Riwayat Transaksi</h2>
+                            <button id="delete-selected-btn" class="button btn-detail" style="display:none; background-color: var(--danger-color);">Hapus Terpilih</button>
+                        </div>
+                        <div class="table-responsive-wrapper">
+                            <table id="history-table" class="display">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" id="select-all-history"></th>
+                                        <th>Tanggal</th><th>Aset</th><th>Tipe</th><th>Lot/Unit</th><th>Harga</th><th>Nilai</th><th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </div>
+            <div id="tools-page" class="page-content">
+                <div class="tools-container">
+                    <div class="card">
+                        <div class="card-header"><h2>Kalender Performa (Heatmap)</h2></div>
+                        <div class="heatmap-container">
+                            <div class="heatmap-nav"><button id="prev-month-btn" class="button btn-detail">&lt;</button><h3 id="month-year-label"></h3><button id="next-month-btn" class="button btn-detail">&gt;</button></div>
+                            <table id="calendar-heatmap" class="calendar-grid"></table>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h2>Impor / Ekspor Data</h2></div>
+                        <div class="tools-buttons">
+                            <button id="download-template-btn" class="button secondary">Unduh Template CSV</button>
+                            <label for="import-csv-input" class="button secondary">Impor dari CSV</label>
+                            <input type="file" id="import-csv-input" accept=".csv" style="display:none;">
+                            <button id="export-csv-btn" class="button secondary">Ekspor Semua Transaksi</button>
+                        </div>
+                        <div class="import-instructions"><strong>Format CSV harus memiliki header:</strong><ul><li><b>tanggal:</b>YYYY-MM-DD</li><li><b>tipe:</b> Beli, Jual, atau Dividen</li><li><b>aset:</b> Kode saham (misal: BBCA)</li><li><b>lot:</b> Jumlah lot (wajib untuk Beli/Jual)</li><li><b>harga:</b> Harga per lembar (wajib untuk Beli/Jual)</li><li><b>biaya:</b> Biaya transaksi (wajib untuk Beli/Jual)</li><li><b>jumlah:</b> Jumlah dividen (hanya untuk tipe Dividen)</li></ul></div>
+                    </div>
+                </div>
+            </div>
+            <div id="settings-page" class="page-content">
+                <div class="settings-container">
+                    <div class="card"><h2>Modal Awal</h2><form id="initial-capital-form"><div class="form-group"><label for="initial-capital">Masukkan Jumlah Modal Awal</label><input type="number" id="initial-capital" placeholder="10000000" required></div><button type="submit">Simpan Modal Awal</button></form></div>
+                    <div class="card"><h2>Arus Kas RDN</h2><form id="cash-flow-form"><div class="form-group"><label for="cash-flow-type">Tipe</label><select id="cash-flow-type" required><option value="Setor">Setor Dana</option><option value="Tarik">Tarik Dana</option></select></div><div class="form-group"><label for="cash-flow-amount">Jumlah</label><input type="number" id="cash-flow-amount" placeholder="5000000" required></div><div class="form-group"><label for="cash-flow-date">Tanggal</label><input type="date" id="cash-flow-date" required></div><button type="submit">Catat Arus Kas</button></form></div>
+                </div>
+            </div>
+        </main>
+        <div id="fab-add-transaction" class="fab">+</div>
+    </div>
+    
+    <!-- Modals -->
+    <div id="transaction-modal" class="modal"><div class="modal-content"><span class="modal-close">&times;</span><h2 id="modal-title"></h2><form id="transaction-form"><input type="hidden" id="edit-id"><div class="form-grid"><div class="form-group"><label for="tanggal">Tanggal</label><input type="date" id="tanggal" required></div><div class="form-group"><label for="tipe">Tipe</label><select id="tipe" required><option value="Beli">Beli</option><option value="Jual">Jual</option><option value="Dividen">Dividen</option></select></div></div><div class="form-group full-width" id="group-aset"><label for="aset">Kode Aset</label><input type="text" id="aset" placeholder="Contoh: BBCA" style="text-transform:uppercase" required></div><div id="trade-fields"><div class="form-grid"><div class="form-group"><label for="lot">Jumlah Lot/Unit</label><input type="number" step="any" id="lot" placeholder="10" required></div><div class="form-group"><label for="harga">Harga /Lembar</label><input type="number" step="any" id="harga" placeholder="9000" required></div></div><div class="form-group full-width" id="group-biaya"><label for="biaya">Biaya Transaksi (Default 0)</label><input type="number" step="any" id="biaya" placeholder="0"></div></div><div class="form-group full-width" id="group-dividen" style="display:none;"><label for="dividen-amount">Jumlah Dividen (Net)</label><input type="number" id="dividen-amount" placeholder="100000"></div><div class="form-group full-width"><label for="keterangan">Keterangan</label><textarea id="keterangan" rows="2"></textarea></div><button type="submit" id="submit-button"></button></form></div></div>
+    <div id="pl-detail-modal" class="modal"><div class="modal-content modal-lg"><span class="modal-close">&times;</span><h2>Detail Realisasi Profit/Loss</h2><div id="pl-detail-grid" class="modal-body pl-detail-grid"></div></div></div>
+    <div id="recap-modal" class="modal"><div class="modal-content modal-lg"><span class="modal-close">&times;</span><h2 id="recap-asset-code"></h2><div class="modal-body"><table id="recap-table"><thead><tr><th>Tanggal</th><th>Tipe</th><th>Lot/Unit</th><th>Harga</th><th>Nilai</th></tr></thead><tbody></tbody><tfoot></tfoot></table></div></div></div>
+    <div id="import-preview-modal" class="modal"><div class="modal-content modal-lg"><span class="modal-close">&times;</span><h2>Pratinjau Impor CSV</h2><p>Pastikan data di bawah ini benar sebelum melanjutkan.</p><div class="modal-body"><table id="import-preview-table"></table></div><div style="display:flex; gap:10px; margin-top:20px;"><button id="confirm-import-btn" class="button">Impor Data Ini</button><button id="cancel-import-btn" class="button secondary">Batal</button></div></div></div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const firebaseConfig = { apiKey: "AIzaSyBKlHGg5HYyUQPRT1BzVNix_tWGQ_jgq0k", authDomain: "saham-tracker.firebaseapp.com", projectId: "saham-tracker", storageBucket: "saham-tracker.appspot.com", messagingSenderId: "317401870829", appId: "1:317401870829:web:eb5fe32a87a78cc8c637e4" };
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.firestore();
+
+            let allTransactions = [], initialCapital = 0, allCashflows = [], csvPreviewData = [], lastAnalysisResult = null, historyDataTable = null;
+            const formatCurrency = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+
+            const ui = {
+                transactionModal: document.getElementById('transaction-modal'), recapModal: document.getElementById('recap-modal'), plDetailModal: document.getElementById('pl-detail-modal'), importPreviewModal: document.getElementById('import-preview-modal'),
+                navSidebar: document.getElementById('nav-sidebar'), hamburgerMenu: document.querySelector('.hamburger-menu'),
+                navTabs: document.querySelectorAll('.nav-tab'), pages: document.querySelectorAll('.page-content'),
+                fab: document.getElementById('fab-add-transaction'), viewPlDetailBtn: document.getElementById('view-pl-detail-btn'),
+                portfolioTable: { body: document.querySelector("#portfolio-table tbody"), foot: document.querySelector("#portfolio-table tfoot") },
+                plDetailGrid: document.getElementById('pl-detail-grid'),
+                historyTable: { table: document.getElementById('history-table') },
+                recapTable: { body: document.querySelector("#recap-table tbody"), foot: document.querySelector("#recap-table tfoot") },
+                recapAssetCode: document.getElementById('recap-asset-code'),
+                transactionForm: document.getElementById('transaction-form'), submitButton: document.getElementById('submit-button'), modalTitle: document.getElementById('modal-title'),
+                statCards: { 
+                    modal: document.getElementById('total-modal-card')?.querySelector('.value'), rdn: document.getElementById('rdn-cash-card')?.querySelector('.value'), pl: document.getElementById('total-pl-card')?.querySelector('.value'), 
+                    winRate: document.getElementById('win-rate-card')?.querySelector('.value'), profitFactor: document.getElementById('profit-factor-card')?.querySelector('.value'),
+                    avgHold: document.getElementById('avg-hold-card')?.querySelector('.value'), bestTrade: document.getElementById('best-trade-card'), worstTrade: document.getElementById('worst-trade-card'),
+                },
+                plSummary: { profit: document.getElementById('total-profit-value'), loss: document.getElementById('total-loss-value') },
+                themeToggle: document.getElementById('theme-toggle'), themeText: document.getElementById('theme-text'),
+                initialCapitalForm: document.getElementById('initial-capital-form'),
+                cashFlowForm: document.getElementById('cash-flow-form'),
+                transactionTypeSelect: document.getElementById('tipe'),
+                heatmap: { container: document.getElementById('calendar-heatmap'), navLabel: document.getElementById('month-year-label'), prevBtn: document.getElementById('prev-month-btn'), nextBtn: document.getElementById('next-month-btn')},
+                exportBtn: document.getElementById('export-csv-btn'), importInput: document.getElementById('import-csv-input'), downloadTemplateBtn: document.getElementById('download-template-btn'),
+                importPreview: { table: document.getElementById('import-preview-table'), confirmBtn: document.getElementById('confirm-import-btn'), cancelBtn: document.getElementById('cancel-import-btn') },
+                deleteSelectedBtn: document.getElementById('delete-selected-btn'),
+            };
+
+            let currentHeatmapDate = new Date();
+
+            // Event Listeners
+            ui.hamburgerMenu.addEventListener('click', () => ui.navSidebar.classList.toggle('active'));
+            ui.navSidebar.addEventListener('click', (e) => {
+                const tab = e.target.closest('.nav-tab');
+                if (!tab) return;
+                if (tab.dataset.tab) switchTab(tab.dataset.tab);
+                else if (tab.id === 'theme-toggle') { let newTheme = document.body.classList.contains('light-mode') ? 'dark-mode' : 'light-mode'; localStorage.setItem('theme', newTheme); updateThemeUI(newTheme); }
+            });
+
+            if(ui.fab) ui.fab.onclick = () => openModal();
+            document.querySelectorAll('.modal-close').forEach(el => el.onclick = () => el.closest('.modal').style.display = 'none');
+            window.onclick = (e) => { if (e.target.classList.contains('modal')) e.target.style.display = 'none'; };
+            if(ui.heatmap.prevBtn) ui.heatmap.prevBtn.onclick = () => { currentHeatmapDate.setMonth(currentHeatmapDate.getMonth() - 1); renderHeatmap(allTransactions); };
+            if(ui.heatmap.nextBtn) ui.heatmap.nextBtn.onclick = () => { currentHeatmapDate.setMonth(currentHeatmapDate.getMonth() + 1); renderHeatmap(allTransactions); };
+            if(ui.exportBtn) ui.exportBtn.onclick = () => exportToCSV(allTransactions);
+            if(ui.downloadTemplateBtn) ui.downloadTemplateBtn.onclick = downloadCSVTemplate;
+            if(ui.importInput) ui.importInput.onchange = (e) => importFromCSV(e.target.files[0]);
+            if(ui.importPreview.confirmBtn) ui.importPreview.confirmBtn.onclick = confirmImport;
+            if(ui.importPreview.cancelBtn) ui.importPreview.cancelBtn.onclick = () => closeModal(ui.importPreviewModal);
+            
+            if(ui.historyTable.table) {
+                ui.historyTable.table.addEventListener('change', (e) => {
+                    if(e.target.matches('.history-checkbox, #select-all-history')) {
+                         const isSelectAll = e.target.id === 'select-all-history';
+                        ui.historyTable.table.querySelectorAll('.history-checkbox').forEach(cb => cb.checked = isSelectAll ? e.target.checked : cb.checked);
+                        const checkboxes = ui.historyTable.table.querySelectorAll('.history-checkbox:checked');
+                        if(ui.deleteSelectedBtn) ui.deleteSelectedBtn.style.display = checkboxes.length > 0 ? 'inline-flex' : 'none';
+                    }
+                });
+            }
+            if (ui.deleteSelectedBtn) ui.deleteSelectedBtn.onclick = handleBulkDelete;
+
+            // Inisialisasi Data
+            db.collection('transactions').orderBy('tanggal', 'asc').onSnapshot(snapshot => {
+                 const transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                 allTransactions = transactions;
+                 Promise.all([
+                     db.collection('settings').doc('capital').get(),
+                     db.collection('cashflow').orderBy('tanggal', 'asc').get()
+                 ]).then(([capitalSnapshot, cashflowSnapshot]) => {
+                     initialCapital = capitalSnapshot.exists ? capitalSnapshot.data().initial : 0;
+                     allCashflows = cashflowSnapshot.docs.map(doc => doc.data());
+                     processAndRenderAll(allTransactions, initialCapital, allCashflows);
+                 });
+             });
+            
+            function analyzeData(transactions, initialCapital, cashflows) {
+                const groupedByAset = transactions.reduce((acc, t) => { (acc[t.aset] = acc[t.aset] || []).push(t); return acc; }, {});
+                let portfolioData = [], plData = [], totalPortfolioModal = 0, totalRealizedPL = 0, winningTrades = 0, losingTrades = 0, totalProfit = 0, totalLoss = 0, bestTrade = 0, worstTrade = 0;
+                let totalHoldingDays = 0, totalLotsSold = 0, cashBalance = initialCapital, tradeDetails = [];
+
+                cashflows.forEach(cf => { cashBalance += cf.tipe === 'Setor' ? cf.jumlah : -cf.jumlah; });
+                transactions.forEach(tx => {
+                    if (tx.tipe === 'Beli') cashBalance -= (tx.lot * 100 * tx.harga + tx.biaya);
+                    else if (tx.tipe === 'Jual') cashBalance += (tx.lot * 100 * tx.harga - tx.biaya);
+                    else if (tx.tipe === 'Dividen') cashBalance += tx.jumlah;
+                });
+
+                for (const aset in groupedByAset) {
+                    const txs = groupedByAset[aset];
+                    let realizedPLForAsset = 0; let buys = [];
+                    let cycleBuyCount = 0, cycleSellCount = 0;
+                    txs.forEach(tx => {
+                        if (tx.tipe === 'Beli') {
+                            buys.push({ lot: tx.lot, cost: tx.lot * 100 * tx.harga + tx.biaya, date: new Date(tx.tanggal) });
+                            cycleBuyCount++;
+                        } else if (tx.tipe === 'Jual') {
+                            let lotToSell = tx.lot, revenue = tx.lot * 100 * tx.harga - tx.biaya, costOfSoldLots = 0;
+                            const sellDate = new Date(tx.tanggal);
+                             cycleSellCount++;
+                            while (lotToSell > 0 && buys.length > 0) {
+                                const firstBuy = buys[0], lotFromThisBuy = Math.min(lotToSell, firstBuy.lot), costPerLot = firstBuy.cost / firstBuy.lot;
+                                const holdingDays = (sellDate - firstBuy.date) / (1000 * 3600 * 24);
+                                costOfSoldLots += lotFromThisBuy * costPerLot;
+                                totalHoldingDays += lotFromThisBuy * holdingDays;
+                                firstBuy.lot -= lotFromThisBuy; firstBuy.cost -= lotFromThisBuy * costPerLot;
+                                lotToSell -= lotFromThisBuy;
+                                if (firstBuy.lot < 1e-7) buys.shift();
+                            }
+                            totalLotsSold += tx.lot;
+                            const tradePL = revenue - costOfSoldLots;
+                            tradeDetails.push({ pl: tradePL }); // Removed tags
+                            realizedPLForAsset += tradePL;
+                            if(tradePL > 0) { winningTrades++; totalProfit += tradePL; if(tradePL > bestTrade) bestTrade = tradePL; } 
+                            else { losingTrades++; if(tradePL < worstTrade) worstTrade = tradePL; }
+                        } else if (tx.tipe === 'Dividen') { realizedPLForAsset += tx.jumlah; totalProfit += tx.jumlah; }
+                    });
+                    let sisaLot = 0, totalModal = 0;
+                    buys.forEach(buy => { sisaLot += buy.lot; totalModal += buy.cost; });
+                    if (sisaLot > 1e-7) {
+                        const avgPriceBeli = totalModal / (sisaLot * 100);
+                        portfolioData.push({ aset, sisaLot, avgPriceBeli, totalModal, buyCount: cycleBuyCount, sellCount: cycleSellCount });
+                        totalPortfolioModal += totalModal;
+                    }
+                    if (realizedPLForAsset !== 0) plData.push({ aset, plRealisasi: realizedPLForAsset });
+                    totalRealizedPL += realizedPLForAsset;
+                }
+                
+                totalLoss = Math.abs(totalRealizedPL - totalProfit);
+                let cumulativePL = 0; const equityData = [];
+                transactions.forEach(tx => {
+                    if (tx.tipe !== 'Beli') { cumulativePL += getRealizedPLForTx(tx, transactions); equityData.push({ date: tx.tanggal, pnl: cumulativePL }); }
+                });
+                
+                const winRate = (winningTrades + losingTrades > 0) ? (winningTrades / (winningTrades + losingTrades)) * 100 : 0;
+                const profitFactor = totalLoss > 0 ? totalProfit / totalLoss : Infinity;
+                const avgHold = totalLotsSold > 0 ? totalHoldingDays / totalLotsSold : 0;
+                
+                return { portfolioData, plData, equityData, totalPortfolioModal, rdnCash: cashBalance, totalRealizedPL, winRate, profitFactor, totalProfit, totalLoss, bestTrade, worstTrade, avgHold, tradeDetails };
+            }
+
+            function processAndRenderAll(transactions, capital, cashflows) {
+                lastAnalysisResult = analyzeData(transactions, capital, cashflows);
+                renderStatCards(lastAnalysisResult);
+                renderPortfolioTable(lastAnalysisResult.portfolioData);
+                renderPLSummary(lastAnalysisResult.totalProfit, lastAnalysisResult.totalLoss);
+                if(ui.viewPlDetailBtn) ui.viewPlDetailBtn.onclick = () => renderPLDetailModal(lastAnalysisResult.plData);
+                renderHistoryTable(transactions);
+                renderEquityChart(lastAnalysisResult.equityData);
+                renderAllocationChart(lastAnalysisResult.portfolioData);
+                renderHeatmap(transactions);
+            }
+            
+            function getRealizedPLForTx(currentTx, allTxs) {
+                 if (currentTx.tipe === 'Dividen') return currentTx.jumlah; if (currentTx.tipe === 'Beli') return 0;
+                const assetHistory = allTxs.filter(tx => tx.aset === currentTx.aset && new Date(tx.tanggal) <= new Date(currentTx.tanggal));
+                const buys = []; let realizedPL = 0;
+                assetHistory.forEach(tx => {
+                    if (tx.tipe === 'Beli') buys.push({ lot: tx.lot, cost: tx.lot * 100 * tx.harga + tx.biaya });
+                    else if (tx.id === currentTx.id) {
+                        let lotToSell = tx.lot, revenue = tx.lot * 100 * tx.harga - tx.biaya, costOfSoldLots = 0;
+                        while(lotToSell > 0 && buys.length > 0) {
+                            const firstBuy = buys[0], lotFromThisBuy = Math.min(lotToSell, firstBuy.lot), costPerLot = firstBuy.cost / firstBuy.lot;
+                            costOfSoldLots += lotFromThisBuy * costPerLot;
+                            firstBuy.lot -= lotFromThisBuy; firstBuy.cost -= lotFromThisBuy * costPerLot;
+                            lotToSell -= lotFromThisBuy;
+                            if (firstBuy.lot < 1e-7) buys.shift();
+                        }
+                        realizedPL = revenue - costOfSoldLots;
+                    }
+                });
+                return realizedPL;
+            }
+            
+            function renderStatCards(analysis) {
+                for (const card in ui.statCards) { if(!ui.statCards[card]) return; }
+                ui.statCards.modal.textContent = formatCurrency(analysis.totalPortfolioModal); 
+                ui.statCards.rdn.textContent = formatCurrency(analysis.rdnCash);
+                ui.statCards.pl.textContent = formatCurrency(analysis.totalRealizedPL); 
+                ui.statCards.pl.className = `value ${analysis.totalRealizedPL >= 0 ? 'profit' : 'loss'}`;
+                ui.statCards.winRate.textContent = `${analysis.winRate.toFixed(1)}%`; 
+                ui.statCards.profitFactor.textContent = isFinite(analysis.profitFactor) ? analysis.profitFactor.toFixed(2) : '∞';
+                
+                const bestTradeValueEl = ui.statCards.bestTrade.querySelector('.value');
+                bestTradeValueEl.textContent = formatCurrency(analysis.bestTrade);
+                bestTradeValueEl.className = 'value profit';
+
+                const worstTradeValueEl = ui.statCards.worstTrade.querySelector('.value');
+                worstTradeValueEl.textContent = formatCurrency(analysis.worstTrade);
+                worstTradeValueEl.className = 'value loss';
+
+                ui.statCards.avgHold.textContent = `${analysis.avgHold.toFixed(1)} Hari`;
+            }
+            function renderPortfolioTable(data) {
+                ui.portfolioTable.body.innerHTML = ''; const total = data.reduce((sum, item) => sum + item.totalModal, 0);
+                data.forEach(item => ui.portfolioTable.body.innerHTML += `<tr><td class="clickable-asset" onclick="handleRecap('${item.aset}')">${item.aset}</td><td>${item.buyCount}</td><td>${item.sellCount}</td><td>${item.sisaLot.toLocaleString('id-ID')}</td><td>${formatCurrency(item.avgPriceBeli)}</td><td>${formatCurrency(item.totalModal)}</td></tr>`);
+                ui.portfolioTable.foot.innerHTML = `<tr><td><strong>TOTAL</strong></td><td colspan="4"></td><td><strong>${formatCurrency(total)}</strong></td></tr>`;
+            }
+            function renderPLSummary(profit, loss) {
+                if(!ui.plSummary.profit || !ui.plSummary.loss) return;
+                ui.plSummary.profit.textContent = formatCurrency(profit);
+                ui.plSummary.loss.textContent = formatCurrency(loss);
+            }
+            function renderPLDetailModal(data) {
+                if(!ui.plDetailGrid) return;
+                ui.plDetailGrid.innerHTML = '';
+                if(data.length === 0) { ui.plDetailGrid.innerHTML = '<p>Belum ada profit/loss yang direalisasikan.</p>'; }
+                data.sort((a,b) => b.plRealisasi - a.plRealisasi).forEach(item => {
+                    const plClass = item.plRealisasi >= 0 ? 'profit' : 'loss';
+                    ui.plDetailGrid.innerHTML += `<div class="pl-detail-card clickable-asset" onclick="handleRecap('${item.aset}')"><h4>${item.aset}</h4><p class="${plClass}">${formatCurrency(item.plRealisasi)}</p></div>`;
+                });
+                ui.plDetailModal.style.display = 'flex';
+            }
+            function renderHistoryTable(transactions) {
+                if(!ui.historyTable.table) return;
+                if(historyDataTable) historyDataTable.destroy();
+                const tableBody = ui.historyTable.table.querySelector('tbody');
+                tableBody.innerHTML = '';
+                transactions.forEach(tx => {
+                    tableBody.innerHTML += `<tr>
+                        <td><input type="checkbox" class="history-checkbox" data-id="${tx.id}"></td><td>${tx.tanggal}</td>
+                        <td>${tx.aset}</td><td>${tx.tipe}</td>
+                        <td>${tx.tipe === 'Dividen' ? '-' : tx.lot.toLocaleString('id-ID')}</td>
+                        <td>${tx.tipe === 'Dividen' ? formatCurrency(tx.jumlah) : formatCurrency(tx.harga)}</td>
+                        <td>${tx.tipe === 'Dividen' ? '-' : formatCurrency(tx.lot * 100 * tx.harga)}</td>
+                        <td class="action-buttons"><button class="btn-edit" onclick="handleEdit('${tx.id}')">E</button><button class="btn-delete" onclick="handleDelete('${tx.id}')">H</button></td>
+                    </tr>`;
+                });
+                historyDataTable = $(ui.historyTable.table).DataTable({ "order": [[ 1, "desc" ]], "pageLength": 5, "searching": true, "lengthChange": false, "columnDefs": [{ "orderable": false, "targets": 0 }], "language": { "search": "", "searchPlaceholder": "Cari..." } });
+            }
+            
+            let equityChart, allocationChart;
+            function renderEquityChart(chartData) {
+                const ctx = document.getElementById('equityChart')?.getContext('2d'); if(!ctx) return; if(equityChart) equityChart.destroy();
+                equityChart = new Chart(ctx, { type: 'line', data: { datasets: [{ label: 'P/L Kumulatif', data: chartData.map(d => ({x: d.date, y: d.pnl})), borderColor: '#00A8FF', backgroundColor: 'rgba(0, 168, 255, 0.1)', fill: true, tension: 0.1, pointRadius: 2 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'day' }, ticks: { color: getComputedStyle(document.body).getPropertyValue('--font-color-muted'), maxRotation: 0, autoSkip: true, maxTicksLimit: 7 }, grid: { color: getComputedStyle(document.body).getPropertyValue('--border-color') } }, y: { ticks: { color: getComputedStyle(document.body).getPropertyValue('--font-color-muted'), callback: (value) => formatCurrency(value).replace('Rp','').trim() }, grid: { color: getComputedStyle(document.body).getPropertyValue('--border-color') } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `P/L: ${formatCurrency(context.parsed.y)}` } } } } });
+            }
+            function renderAllocationChart(portfolioData) {
+                const ctx = document.getElementById('assetAllocationChart')?.getContext('2d'); if(!ctx) return; if(allocationChart) allocationChart.destroy();
+                allocationChart = new Chart(ctx, { type: 'doughnut', data: { labels: portfolioData.map(p => p.aset), datasets: [{ label: 'Alokasi Modal', data: portfolioData.map(p => p.totalModal), backgroundColor: ['#00A8FF', '#007BFF', '#28a745', '#dc3545', '#ffc107', '#17a2b8', '#6610f2'], borderColor: getComputedStyle(document.body).getPropertyValue('--card-color'), borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { color: getComputedStyle(document.body).getPropertyValue('--font-color'), boxWidth: 10, padding: 10 } } } } });
+            }
+            
+            function openModal(isEdit = false, data = {}) {
+                resetForm();
+                ui.modalTitle.textContent = isEdit ? "Edit Transaksi" : "Tambah Transaksi Baru";
+                ui.submitButton.textContent = isEdit ? "Perbarui Transaksi" : "Simpan Transaksi";
+                if(isEdit) {
+                    ui.transactionTypeSelect.value = data.tipe;
+                    toggleTransactionFields(data.tipe);
+                    document.getElementById('edit-id').value = data.id; document.getElementById('tanggal').value = data.tanggal; document.getElementById('aset').value = data.aset; 
+                    if(data.tipe === 'Dividen') { document.getElementById('dividen-amount').value = data.jumlah; }
+                    else { document.getElementById('lot').value = data.lot; document.getElementById('harga').value = data.harga; document.getElementById('biaya').value = data.biaya; }
+                    document.getElementById('keterangan').value = data.keterangan || '';
+                } else {
+                    toggleTransactionFields('Beli');
+                }
+                ui.transactionModal.style.display = 'flex';
+            }
+            
+            function closeModal(modal) { if(modal) modal.style.display = 'none'; }
+            function resetForm() { ui.transactionForm.reset(); document.getElementById('edit-id').value = ''; toggleTransactionFields('Beli'); }
+
+            if(ui.transactionForm) ui.transactionForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const id = document.getElementById('edit-id').value; const type = ui.transactionTypeSelect.value;
+                let transactionData = { tanggal: document.getElementById('tanggal').value, aset: document.getElementById('aset').value.toUpperCase(), tipe: type, keterangan: document.getElementById('keterangan').value };
+                if (type === 'Dividen') transactionData.jumlah = parseFloat(document.getElementById('dividen-amount').value);
+                else { transactionData.lot = parseFloat(document.getElementById('lot').value); transactionData.harga = parseFloat(document.getElementById('harga').value); transactionData.biaya = parseFloat(document.getElementById('biaya').value) || 0; }
+                const promise = id ? db.collection('transactions').doc(id).update({ ...transactionData, lastUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()}) : db.collection('transactions').add({ ...transactionData, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
+                promise.then(() => closeModal(ui.transactionModal));
+            });
+
+            window.handleEdit = (id) => db.collection('transactions').doc(id).get().then(doc => doc.exists && openModal(true, {id, ...doc.data()}));
+            window.handleDelete = (id) => confirm('Anda yakin ingin menghapus transaksi ini?') && db.collection('transactions').doc(id).delete();
+            
+            window.handleRecap = (aset) => {
+                const assetTransactions = allTransactions.filter(tx => tx.aset === aset);
+                if(assetTransactions.length === 0) return;
+                
+                ui.recapAssetCode.textContent = `Rekapitulasi: ${aset}`;
+                ui.recapTable.body.innerHTML = ''; ui.recapTable.foot.innerHTML = '';
+                let totalRealizedPL = 0; const buys = [];
+                assetTransactions.forEach(tx => {
+                    const nilai = tx.tipe === 'Dividen' ? tx.jumlah : tx.lot * 100 * tx.harga;
+                    ui.recapTable.body.innerHTML += `<tr><td>${tx.tanggal}</td><td>${tx.tipe}</td><td>${tx.tipe === 'Dividen' ? '-' : tx.lot.toLocaleString('id-ID')}</td><td>${tx.tipe === 'Dividen' ? '-' : formatCurrency(tx.harga)}</td><td>${formatCurrency(nilai)}</td></tr>`;
+                    if (tx.tipe === 'Beli') buys.push({ lot: tx.lot, cost: tx.lot * 100 * tx.harga + tx.biaya });
+                    else if (tx.tipe === 'Jual') {
+                        let lotToSell = tx.lot, revenue = tx.lot * 100 * tx.harga - tx.biaya, costOfSoldLots = 0;
+                        while (lotToSell > 0 && buys.length > 0) {
+                            const firstBuy = buys[0], lotFromThisBuy = Math.min(lotToSell, firstBuy.lot), costPerLot = firstBuy.cost / firstBuy.lot;
+                            costOfSoldLots += lotFromThisBuy * costPerLot;
+                            firstBuy.lot -= lotFromThisBuy; firstBuy.cost -= lotFromThisBuy * costPerLot;
+                            lotToSell -= lotFromThisBuy;
+                            if (firstBuy.lot < 1e-7) buys.shift();
+                        }
+                        totalRealizedPL += revenue - costOfSoldLots;
+                    } else if (tx.tipe === 'Dividen') totalRealizedPL += tx.jumlah;
+                });
+                
+                const plClass = totalRealizedPL >= 0 ? 'profit' : 'loss';
+                ui.recapTable.foot.innerHTML = `<tr><td colspan="3"><strong>Total P/L Realisasi</strong></td><td colspan="2" class="${plClass}"><strong>${formatCurrency(totalRealizedPL)}</strong></td></tr>`;
+                ui.recapModal.style.display = 'flex';
+            };
+            
+            function switchTab(tabId) {
+                ui.navTabs.forEach(t => t.classList.remove('active'));
+                ui.pages.forEach(p => p.classList.remove('active'));
+                const activeTab = document.querySelector(`.nav-tab[data-tab="${tabId}"]`);
+                const activePage = document.getElementById(`${tabId}-page`);
+                if (activeTab) activeTab.classList.add('active');
+                if (activePage) activePage.classList.add('active');
+                ui.navSidebar.classList.remove('active');
+            }
+            
+            if(ui.transactionTypeSelect) ui.transactionTypeSelect.addEventListener('change', (e) => toggleTransactionFields(e.target.value));
+            function toggleTransactionFields(type) {
+                const isDividend = type === 'Dividen';
+                const tradeFields = document.getElementById('trade-fields');
+                const dividenGroup = document.getElementById('group-dividen');
+                if(tradeFields) tradeFields.style.display = isDividend ? 'none' : 'block';
+                if(dividenGroup) dividenGroup.style.display = isDividend ? 'block' : 'none';
+            }
+
+            if(ui.initialCapitalForm) ui.initialCapitalForm.addEventListener('submit', (e) => { e.preventDefault(); const capital = parseFloat(document.getElementById('initial-capital').value); db.collection('settings').doc('capital').set({ initial: capital }); });
+            if(ui.cashFlowForm) ui.cashFlowForm.addEventListener('submit', (e) => { e.preventDefault(); db.collection('cashflow').add({ tipe: document.getElementById('cash-flow-type').value, jumlah: parseFloat(document.getElementById('cash-flow-amount').value), tanggal: document.getElementById('cash-flow-date').value }); ui.cashFlowForm.reset(); });
+            
+            const currentTheme = localStorage.getItem('theme') || 'dark-mode';
+            updateThemeUI(currentTheme);
+            
+            function updateThemeUI(theme) {
+                document.body.className = theme === 'light-mode' ? 'light-mode' : '';
+                if (ui.themeText) ui.themeText.textContent = theme === 'light-mode' ? 'Mode Terang' : 'Mode Gelap';
+                if (lastAnalysisResult) {
+                    processAndRenderAll(allTransactions, initialCapital, allCashflows);
+                }
+            }
+            
+            function renderHeatmap(transactions) {
+                if(!ui.heatmap.container) return;
+                const plByDate = {};
+                transactions.forEach(tx => {
+                    if (tx.tipe !== 'Beli') {
+                        const date = tx.tanggal; const pl = getRealizedPLForTx(tx, transactions);
+                        plByDate[date] = (plByDate[date] || 0) + pl;
+                    }
+                });
+                const year = currentHeatmapDate.getFullYear(), month = currentHeatmapDate.getMonth();
+                ui.heatmap.navLabel.textContent = `${currentHeatmapDate.toLocaleString('id-ID', { month: 'long' })} ${year}`;
+                const daysInMonth = new Date(year, month + 1, 0).getDate(), firstDayOfMonth = new Date(year, month, 1).getDay();
+                let tableHTML = `<thead><tr><th>Min</th><th>Sen</th><th>Sel</th><th>Rab</th><th>Kam</th><th>Jum</th><th>Sab</th></tr></thead><tbody><tr>`;
+                for (let i = 0; i < firstDayOfMonth; i++) tableHTML += `<td></td>`;
+                let maxAbsPL = 0; Object.values(plByDate).forEach(pl => { if(Math.abs(pl) > maxAbsPL) maxAbsPL = Math.abs(pl); });
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const pl = plByDate[dateStr]; let cellStyle = '', plContent = '';
+                    if (pl) {
+                        const opacity = Math.min(Math.max(Math.abs(pl) / (maxAbsPL || 1), 0.2), 1);
+                        const color = pl > 0 ? `rgba(40, 167, 69, ${opacity})` : `rgba(220, 53, 69, ${opacity})`;
+                        cellStyle = `style="background-color: ${color}"`;
+                        plContent = `<div class="day-pl">${formatCurrency(pl).replace('Rp','')}</div>`;
+                    }
+                    tableHTML += `<td ${cellStyle}><div class="day-number">${day}</div>${plContent}</td>`;
+                    if ((firstDayOfMonth + day) % 7 === 0) tableHTML += `</tr><tr>`;
+                }
+                tableHTML += `</tr></tbody>`; ui.heatmap.container.innerHTML = tableHTML;
+            }
+
+            function downloadCSVTemplate() {
+                const headers = ["tanggal", "tipe", "aset", "lot", "harga", "biaya", "jumlah"];
+                const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\r\n";
+                const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent));
+                link.setAttribute("download", "template_jurnal.csv");
+                document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            }
+            function exportToCSV(transactions) {
+                let csvContent = "data:text/csv;charset=utf-8,"; const headers = ["tanggal", "tipe", "aset", "lot", "harga", "biaya", "jumlah"];
+                csvContent += headers.join(",") + "\r\n";
+                transactions.forEach(tx => { const row = [tx.tanggal || '', tx.tipe || '', tx.aset || '', tx.lot || 0, tx.harga || 0, tx.biaya || 0, tx.jumlah || 0]; csvContent += row.join(",") + "\r\n"; });
+                const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent));
+                link.setAttribute("download", "jurnal_trading.csv");
+                document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            }
+            function importFromCSV(file) {
+                if (!file) return; const reader = new FileReader();
+                reader.onload = function(e) {
+                    const text = e.target.result; const rows = text.split('\n').slice(1);
+                    csvPreviewData = []; let tableHTML = `<thead><tr><th>tanggal</th><th>tipe</th><th>aset</th><th>lot</th><th>harga</th><th>biaya</th><th>jumlah</th></tr></thead><tbody>`;
+                    rows.forEach(row => {
+                        if (!row) return; const columns = row.split(',');
+                        const txData = { tanggal: columns[0] || '', tipe: columns[1] || '', aset: (columns[2] || '').toUpperCase(), lot: parseFloat(columns[3]) || 0, harga: parseFloat(columns[4]) || 0, biaya: parseFloat(columns[5]) || 0, jumlah: parseFloat(columns[6]) || 0, };
+                        csvPreviewData.push(txData); tableHTML += `<tr>${Object.values(txData).map(val => `<td>${val}</td>`).join('')}</tr>`;
+                    });
+                    tableHTML += `</tbody>`; ui.importPreview.table.innerHTML = tableHTML; ui.importPreviewModal.style.display = 'flex';
+                };
+                reader.readAsText(file); ui.importInput.value = '';
+            }
+            function confirmImport() {
+                if (csvPreviewData.length === 0) return alert('Tidak ada data untuk diimpor.');
+                const batch = db.batch();
+                csvPreviewData.forEach(txData => { const docRef = db.collection("transactions").doc(); batch.set(docRef, {...txData, createdAt: firebase.firestore.FieldValue.serverTimestamp()}); });
+                batch.commit().then(() => { alert('Impor CSV berhasil!'); closeModal(ui.importPreviewModal); }).catch(err => { alert('Gagal mengimpor data.'); console.error(err); });
+            }
+            function toggleSelectAll(checked, tableSelector) {
+                const table = $(tableSelector).DataTable();
+                table.rows().nodes().to$().find('input[type="checkbox"]').prop('checked', checked);
+                $(table.rows().nodes().to$().find('input[type="checkbox"]')).trigger('change');
+            }
+            function handleBulkDelete() {
+                const checkedCheckboxes = document.querySelectorAll('.history-checkbox:checked');
+                if (checkedCheckboxes.length === 0) return alert('Pilih transaksi yang ingin dihapus.');
+                if (!confirm(`Anda yakin ingin menghapus ${checkedCheckboxes.length} transaksi terpilih?`)) return;
+                const batch = db.batch();
+                checkedCheckboxes.forEach(cb => { const docId = cb.dataset.id; const docRef = db.collection('transactions').doc(docId); batch.delete(docRef); });
+                batch.commit().then(() => { alert('Transaksi terpilih berhasil dihapus.'); ui.deleteSelectedBtn.style.display = 'none'; }).catch(err => { alert('Gagal menghapus transaksi.'); console.error(err); });
+            }
+        });
+    </script>
+</body>
+</html>
