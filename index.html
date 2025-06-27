@@ -259,10 +259,10 @@
             </div>
         </div>
         <nav id="nav-sidebar" class="nav-sidebar">
-            <a class="nav-tab active" data-tab="dashboard"><span>Dashboard</span></a>
+            <a class="nav-tab active" data-tab="dashboard"><span>dashboard</span></a>
             <a class="nav-tab" data-tab="tools"><span>Tools</span></a>
             <a class="nav-tab" data-tab="settings"><span>Settings</span></a>
-            <a class="nav-tab" id="theme-toggle"><span id="theme-text">Dark Mode</span></a>
+            <a class="nav-tab" id="theme-toggle"><span id="theme-text">Mode Gelap</span></a>
         </nav>
 
         <main>
@@ -323,7 +323,7 @@
                             <input type="file" id="import-csv-input" accept=".csv" style="display:none;">
                             <button id="export-csv-btn" class="button secondary">Ekspor Semua Transaksi</button>
                         </div>
-                        <div class="import-instructions"><strong>Format CSV harus memiliki header:</strong><ul><li><b>tanggal:</b>YYYY-MM-DD</li><li><b>tipe:</b> Beli, Jual, atau Dividen</li><li><b>aset:</b> Kode saham (misal: BBCA)</li><li><b>lot:</b> Jumlah lot (wajib untuk Beli/Jual)</li><li><b>harga:</b> Harga per lembar (wajib untuk Beli/Jual)</li><li><b>biaya:</b> Biaya transaksi (wajib untuk Beli/Jual)</li><li><b>jumlah:</b> Jumlah dividen (hanya untuk tipe Dividen)</li></ul></div>
+                        <div class="import-instructions"><strong>Format CSV (pemisah titik koma ';') harus memiliki header:</strong><ul><li><b>tanggal:</b>YYYY-MM-DD</li><li><b>tipe:</b> Beli, Jual, atau Dividen</li><li><b>aset:</b> Kode saham (misal: BBCA)</li><li><b>lot:</b> Jumlah lot (wajib untuk Beli/Jual)</li><li><b>harga:</b> Harga per lembar (wajib untuk Beli/Jual)</li><li><b>biaya:</b> Biaya transaksi (wajib untuk Beli/Jual)</li><li><b>jumlah:</b> Jumlah dividen (hanya untuk tipe Dividen)</li></ul></div>
                     </div>
                 </div>
             </div>
@@ -364,7 +364,13 @@
                 historyTable: { table: document.getElementById('history-table') },
                 recapTable: { body: document.querySelector("#recap-table tbody"), foot: document.querySelector("#recap-table tfoot") },
                 recapAssetCode: document.getElementById('recap-asset-code'),
-                transactionForm: document.getElementById('transaction-form'), submitButton: document.getElementById('submit-button'), modalTitle: document.getElementById('modal-title'),
+                transactionForm: document.getElementById('transaction-form'), 
+                submitButton: document.getElementById('submit-button'), 
+                modalTitle: document.getElementById('modal-title'),
+                transactionTypeSelect: document.getElementById('tipe'),
+                lotInput: document.getElementById('lot'),
+                hargaInput: document.getElementById('harga'),
+                dividenAmountInput: document.getElementById('dividen-amount'),
                 statCards: { 
                     modal: document.getElementById('total-modal-card')?.querySelector('.value'), rdn: document.getElementById('rdn-cash-card')?.querySelector('.value'), pl: document.getElementById('total-pl-card')?.querySelector('.value'), 
                     winRate: document.getElementById('win-rate-card')?.querySelector('.value'), profitFactor: document.getElementById('profit-factor-card')?.querySelector('.value'),
@@ -374,7 +380,6 @@
                 themeToggle: document.getElementById('theme-toggle'), themeText: document.getElementById('theme-text'),
                 initialCapitalForm: document.getElementById('initial-capital-form'),
                 cashFlowForm: document.getElementById('cash-flow-form'),
-                transactionTypeSelect: document.getElementById('tipe'),
                 heatmap: { container: document.getElementById('calendar-heatmap'), navLabel: document.getElementById('month-year-label'), prevBtn: document.getElementById('prev-month-btn'), nextBtn: document.getElementById('next-month-btn')},
                 exportBtn: document.getElementById('export-csv-btn'), importInput: document.getElementById('import-csv-input'), downloadTemplateBtn: document.getElementById('download-template-btn'),
                 importPreview: { table: document.getElementById('import-preview-table'), confirmBtn: document.getElementById('confirm-import-btn'), cancelBtn: document.getElementById('cancel-import-btn') },
@@ -629,8 +634,13 @@
                 e.preventDefault();
                 const id = document.getElementById('edit-id').value; const type = ui.transactionTypeSelect.value;
                 let transactionData = { tanggal: document.getElementById('tanggal').value, aset: document.getElementById('aset').value.toUpperCase(), tipe: type, keterangan: document.getElementById('keterangan').value };
-                if (type === 'Dividen') transactionData.jumlah = parseFloat(document.getElementById('dividen-amount').value);
-                else { transactionData.lot = parseFloat(document.getElementById('lot').value); transactionData.harga = parseFloat(document.getElementById('harga').value); transactionData.biaya = parseFloat(document.getElementById('biaya').value) || 0; }
+                if (type === 'Dividen') {
+                    transactionData.jumlah = parseFloat(ui.dividenAmountInput.value);
+                } else { 
+                    transactionData.lot = parseFloat(ui.lotInput.value); 
+                    transactionData.harga = parseFloat(ui.hargaInput.value); 
+                    transactionData.biaya = parseFloat(document.getElementById('biaya').value) || 0; 
+                }
                 const promise = id ? db.collection('transactions').doc(id).update({ ...transactionData, lastUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()}) : db.collection('transactions').add({ ...transactionData, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
                 promise.then(() => closeModal(ui.transactionModal));
             });
@@ -678,12 +688,21 @@
             }
             
             if(ui.transactionTypeSelect) ui.transactionTypeSelect.addEventListener('change', (e) => toggleTransactionFields(e.target.value));
+            
             function toggleTransactionFields(type) {
                 const isDividend = type === 'Dividen';
                 const tradeFields = document.getElementById('trade-fields');
                 const dividenGroup = document.getElementById('group-dividen');
+
                 if(tradeFields) tradeFields.style.display = isDividend ? 'none' : 'block';
                 if(dividenGroup) dividenGroup.style.display = isDividend ? 'block' : 'none';
+
+                // Toggle the 'required' attribute to fix form submission
+                if (ui.lotInput && ui.hargaInput && ui.dividenAmountInput) {
+                    ui.lotInput.required = !isDividend;
+                    ui.hargaInput.required = !isDividend;
+                    ui.dividenAmountInput.required = isDividend;
+                }
             }
 
             if(ui.initialCapitalForm) ui.initialCapitalForm.addEventListener('submit', (e) => { e.preventDefault(); const capital = parseFloat(document.getElementById('initial-capital').value); db.collection('settings').doc('capital').set({ initial: capital }); });
@@ -694,7 +713,7 @@
             
             function updateThemeUI(theme) {
                 document.body.className = theme === 'light-mode' ? 'light-mode' : '';
-                if (ui.themeText) ui.themeText.textContent = theme === 'light-mode' ? 'Mode Terang' : 'Mode Gelap';
+                if (ui.themeText) ui.themeText.textContent = theme === 'light-mode' ? 'Light Mode' : 'Dark Mode';
                 if (lastAnalysisResult) {
                     processAndRenderAll(allTransactions, initialCapital, allCashflows);
                 }
@@ -732,15 +751,15 @@
 
             function downloadCSVTemplate() {
                 const headers = ["tanggal", "tipe", "aset", "lot", "harga", "biaya", "jumlah"];
-                const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\r\n";
+                const csvContent = "data:text/csv;charset=utf-8," + headers.join(";") + "\r\n";
                 const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent));
                 link.setAttribute("download", "template_jurnal.csv");
                 document.body.appendChild(link); link.click(); document.body.removeChild(link);
             }
             function exportToCSV(transactions) {
                 let csvContent = "data:text/csv;charset=utf-8,"; const headers = ["tanggal", "tipe", "aset", "lot", "harga", "biaya", "jumlah"];
-                csvContent += headers.join(",") + "\r\n";
-                transactions.forEach(tx => { const row = [tx.tanggal || '', tx.tipe || '', tx.aset || '', tx.lot || 0, tx.harga || 0, tx.biaya || 0, tx.jumlah || 0]; csvContent += row.join(",") + "\r\n"; });
+                csvContent += headers.join(";") + "\r\n";
+                transactions.forEach(tx => { const row = [tx.tanggal || '', tx.tipe || '', tx.aset || '', tx.lot || 0, tx.harga || 0, tx.biaya || 0, tx.jumlah || 0]; csvContent += row.join(";") + "\r\n"; });
                 const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent));
                 link.setAttribute("download", "jurnal_trading.csv");
                 document.body.appendChild(link); link.click(); document.body.removeChild(link);
@@ -751,7 +770,7 @@
                     const text = e.target.result; const rows = text.split('\n').slice(1);
                     csvPreviewData = []; let tableHTML = `<thead><tr><th>tanggal</th><th>tipe</th><th>aset</th><th>lot</th><th>harga</th><th>biaya</th><th>jumlah</th></tr></thead><tbody>`;
                     rows.forEach(row => {
-                        if (!row) return; const columns = row.split(',');
+                        if (!row) return; const columns = row.split(';');
                         const txData = { tanggal: columns[0] || '', tipe: columns[1] || '', aset: (columns[2] || '').toUpperCase(), lot: parseFloat(columns[3]) || 0, harga: parseFloat(columns[4]) || 0, biaya: parseFloat(columns[5]) || 0, jumlah: parseFloat(columns[6]) || 0, };
                         csvPreviewData.push(txData); tableHTML += `<tr>${Object.values(txData).map(val => `<td>${val}</td>`).join('')}</tr>`;
                     });
