@@ -169,7 +169,85 @@
         .paginate_button:hover { background: var(--primary-color) !important; border-color: var(--border-color) !important; }
 
         @media (max-width: 1400px) { .grid-container, .stat-grid { grid-template-columns: repeat(4, 1fr); } }
-        @media (max-width: 900px) { .grid-container, .chart-container, .settings-container, .stat-grid, .tools-container { display: flex; flex-direction: column; } }
+        
+        @media (max-width: 900px) { 
+            .grid-container, .chart-container, .settings-container, .stat-grid, .tools-container { display: flex; flex-direction: column; } 
+            
+            /* Responsive table styles */
+            .responsive-table thead {
+                display: none;
+            }
+            .responsive-table tr {
+                display: block;
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                margin-bottom: 15px;
+                padding: 15px;
+            }
+            .responsive-table tfoot {
+                display: none; /* Hide footer on mobile cards */
+            }
+            .responsive-table td {
+                display: flex;
+                justify-content: space-between;
+                text-align: right;
+                font-size: 0.9em;
+                padding: 10px 5px;
+                border-bottom: 1px solid var(--primary-color);
+                white-space: normal;
+                overflow: visible;
+                text-overflow: clip;
+            }
+            .responsive-table td:last-child {
+                border-bottom: none;
+            }
+            .responsive-table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: var(--font-color-muted);
+                text-align: left;
+                margin-right: 15px;
+            }
+            .responsive-table td.action-buttons {
+                justify-content: center;
+                padding-top: 15px;
+            }
+            .responsive-table td.action-buttons::before {
+                display: none;
+            }
+            .responsive-table td[data-label="Pilih"] {
+                justify-content: center;
+            }
+            .responsive-table td[data-label="Pilih"]::before {
+                display: none;
+            }
+            #portfolio-table {
+                border-collapse: separate;
+                border-spacing: 0 15px;
+                margin-top: 0 !important;
+            }
+             #portfolio-table tbody tr {
+                padding: 0;
+                border: none;
+                background-color: var(--primary-color);
+                border-radius: 8px;
+             }
+             #portfolio-table tbody td {
+                background-color: var(--primary-color);
+                padding: 15px;
+                border: none;
+             }
+            .dataTables_wrapper .dataTables_paginate .paginate_button {
+                padding: 0.4em 0.8em;
+            }
+            .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info {
+                text-align: left;
+                width: 100%;
+            }
+             .dataTables_wrapper .dataTables_filter input {
+                width: 95%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -201,7 +279,12 @@
                         <div class="card stat-card" id="worst-trade-card"><h3>Trade Rugi</h3><div class="value loss">-</div></div>
                     </div>
                     
-                    <section class="card portfolio-section"><div class="card-header"><h2>Portofolio Saat Ini</h2></div><table id="portfolio-table"><thead><tr><th>Aset</th><th>#Beli</th><th>#Jual</th><th>Sisa Lot</th><th>Avg. Price</th><th>Modal</th></tr></thead><tbody></tbody><tfoot></tfoot></table></section>
+                    <section class="card portfolio-section">
+                        <div class="card-header"><h2>Portofolio Saat Ini</h2></div>
+                        <div class="table-responsive-wrapper">
+                             <table id="portfolio-table" class="responsive-table"><thead><tr><th>Aset</th><th>#Beli</th><th>#Jual</th><th>Sisa Lot</th><th>Avg. Price</th><th>Modal</th></tr></thead><tbody></tbody><tfoot></tfoot></table>
+                        </div>
+                    </section>
                     <section class="card pl-section"><div class="card-header"><h2>Ringkasan Realisasi</h2><button id="view-pl-detail-btn" class="button btn-detail">Detail</button></div><div class="pl-summary"><div class="pl-item"><h4>Total Untung</h4><div class="pl-value profit" id="total-profit-value">-</div></div><div class="pl-item"><h4>Total Rugi</h4><div class="pl-value loss" id="total-loss-value">-</div></div></div></section>
                     <section class="card chart-section"><div class="card-header"><h2>Visualisasi Data</h2></div><div class="chart-container"><div class="chart-wrapper"><canvas id="equityChart"></canvas></div><div class="chart-wrapper"><canvas id="assetAllocationChart"></canvas></div></div></section>
                     <section class="card history-section">
@@ -210,7 +293,7 @@
                             <button id="delete-selected-btn" class="button btn-detail" style="display:none; background-color: var(--danger-color);">Hapus Terpilih</button>
                         </div>
                         <div class="table-responsive-wrapper">
-                            <table id="history-table" class="display">
+                            <table id="history-table" class="display responsive-table">
                                 <thead>
                                     <tr>
                                         <th><input type="checkbox" id="select-all-history"></th>
@@ -264,7 +347,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const firebaseConfig = { apiKey: "", authDomain: "saham-tracker.firebaseapp.com", projectId: "saham-tracker", storageBucket: "saham-tracker.appspot.com", messagingSenderId: "317401870829", appId: "1:317401870829:web:eb5fe32a87a78cc8c637e4" };
+            const firebaseConfig = { apiKey: "AIzaSyBKlHGg5HYyUQPRT1BzVNix_tWGQ_jgq0k", authDomain: "saham-tracker.firebaseapp.com", projectId: "saham-tracker", storageBucket: "saham-tracker.appspot.com", messagingSenderId: "317401870829", appId: "1:317401870829:web:eb5fe32a87a78cc8c637e4" };
             firebase.initializeApp(firebaseConfig);
             const db = firebase.firestore();
 
@@ -465,7 +548,16 @@
             }
             function renderPortfolioTable(data) {
                 ui.portfolioTable.body.innerHTML = ''; const total = data.reduce((sum, item) => sum + item.totalModal, 0);
-                data.forEach(item => ui.portfolioTable.body.innerHTML += `<tr><td class="clickable-asset" onclick="handleRecap('${item.aset}')">${item.aset}</td><td>${item.buyCount}</td><td>${item.sellCount}</td><td>${item.sisaLot.toLocaleString('id-ID')}</td><td>${formatCurrency(item.avgPriceBeli)}</td><td>${formatCurrency(item.totalModal)}</td></tr>`);
+                data.forEach(item => {
+                    ui.portfolioTable.body.innerHTML += `<tr>
+                        <td data-label="Aset" class="clickable-asset" onclick="handleRecap('${item.aset}')">${item.aset}</td>
+                        <td data-label="#Beli">${item.buyCount}</td>
+                        <td data-label="#Jual">${item.sellCount}</td>
+                        <td data-label="Sisa Lot">${item.sisaLot.toLocaleString('id-ID')}</td>
+                        <td data-label="Avg. Price">${formatCurrency(item.avgPriceBeli)}</td>
+                        <td data-label="Modal">${formatCurrency(item.totalModal)}</td>
+                    </tr>`;
+                });
                 ui.portfolioTable.foot.innerHTML = `<tr><td><strong>TOTAL</strong></td><td colspan="4"></td><td><strong>${formatCurrency(total)}</strong></td></tr>`;
             }
             function renderPLSummary(profit, loss) {
@@ -490,15 +582,17 @@
                 tableBody.innerHTML = '';
                 transactions.forEach(tx => {
                     tableBody.innerHTML += `<tr>
-                        <td><input type="checkbox" class="history-checkbox" data-id="${tx.id}"></td><td>${tx.tanggal}</td>
-                        <td>${tx.aset}</td><td>${tx.tipe}</td>
-                        <td>${tx.tipe === 'Dividen' ? '-' : tx.lot.toLocaleString('id-ID')}</td>
-                        <td>${tx.tipe === 'Dividen' ? formatCurrency(tx.jumlah) : formatCurrency(tx.harga)}</td>
-                        <td>${tx.tipe === 'Dividen' ? '-' : formatCurrency(tx.lot * 100 * tx.harga)}</td>
-                        <td class="action-buttons"><button class="btn-edit" onclick="handleEdit('${tx.id}')">E</button><button class="btn-delete" onclick="handleDelete('${tx.id}')">H</button></td>
+                        <td data-label="Pilih"><input type="checkbox" class="history-checkbox" data-id="${tx.id}"></td>
+                        <td data-label="Tanggal">${tx.tanggal}</td>
+                        <td data-label="Aset">${tx.aset}</td>
+                        <td data-label="Tipe">${tx.tipe}</td>
+                        <td data-label="Lot/Unit">${tx.tipe === 'Dividen' ? '-' : tx.lot.toLocaleString('id-ID')}</td>
+                        <td data-label="Harga">${tx.tipe === 'Dividen' ? formatCurrency(tx.jumlah) : formatCurrency(tx.harga)}</td>
+                        <td data-label="Nilai">${tx.tipe === 'Dividen' ? '-' : formatCurrency(tx.lot * 100 * tx.harga)}</td>
+                        <td data-label="Aksi" class="action-buttons"><button class="btn-edit" onclick="handleEdit('${tx.id}')">E</button><button class="btn-delete" onclick="handleDelete('${tx.id}')">H</button></td>
                     </tr>`;
                 });
-                historyDataTable = $(ui.historyTable.table).DataTable({ "order": [[ 1, "desc" ]], "pageLength": 5, "searching": true, "lengthChange": false, "columnDefs": [{ "orderable": false, "targets": 0 }], "language": { "search": "", "searchPlaceholder": "Cari..." } });
+                historyDataTable = $(ui.historyTable.table).DataTable({ "order": [[ 1, "desc" ]], "pageLength": 5, "searching": true, "lengthChange": false, "columnDefs": [{ "orderable": false, "targets": 0 }], "language": { "search": "", "searchPlaceholder": "Cari..." }, "responsive": false });
             }
             
             let equityChart, allocationChart;
