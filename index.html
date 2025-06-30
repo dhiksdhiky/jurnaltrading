@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jurnal Trading Pro 6.0</title>
+    <title>Jurnal Trading Pro 7.0</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
@@ -62,7 +63,7 @@
         .page-content { display: none; }
         .page-content.active { display: block; }
 
-        .grid-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; max-width: 1600px; margin: auto; }
+        .grid-container, .watchlist-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; max-width: 1600px; margin: auto; }
         .tools-container, .settings-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; max-width: 1200px; margin: auto; }
 
         .card {
@@ -81,27 +82,56 @@
         .stat-card h3 { margin: 0 0 5px 0; font-size: 0.8em; color: var(--font-color-muted); text-transform: uppercase; }
         .stat-card .value { font-size: 1.6em; font-weight: 600; }
         
+        /* New styles for split value card */
+        .stat-card .value-split {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .stat-card .value-split > div {
+            text-align: center;
+        }
+        .stat-card .sub-heading {
+            margin: 0 0 5px 0;
+            font-size: 0.7em;
+            color: var(--font-color-muted);
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+        .stat-card .value-split .value {
+            font-size: 1.2em; /* Slightly smaller */
+        }
+
         .pl-summary .pl-item { margin-bottom: 10px; }
         .pl-summary h4 { margin: 0 0 4px 0; font-size: 0.8em; color: var(--font-color-muted); }
         .pl-summary .pl-value { font-size: 1.2em; font-weight: 500; }
 
-        .button {
+        .button, button {
             padding: 12px; background: linear-gradient(90deg, #00A8FF, #007BFF); color: white;
             border: none; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 500;
             transition: transform 0.2s, box-shadow 0.2s; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px;
         }
-        .button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 168, 255, 0.2); }
+        .button:hover, button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 168, 255, 0.2); }
         .button.secondary { background: var(--primary-color); }
         .button.secondary:hover { background: var(--secondary-color); }
-
+        
         .btn-detail { padding: 5px 10px; font-size: 0.75em; background: var(--primary-color); width: auto; }
         .btn-detail:hover { background: var(--secondary-color); }
+
+        .btn-refresh { padding: 6px; font-size: 0.8em; background: var(--primary-color); width: auto; min-width: 30px; }
+        .btn-refresh:hover { background: var(--secondary-color); }
+        .btn-refresh .fa-spin { display: none; }
+        .btn-refresh.loading .fa-spin { display: inline-block; }
+        .btn-refresh.loading .fa-sync { display: none; }
 
         .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; grid-column: 1 / -1; margin-bottom: 20px; }
         .portfolio-section { grid-column: 1 / 4; }
         .pl-section { grid-column: 4 / 5; }
         .chart-section { grid-column: 1 / -1; }
         .history-section { grid-column: 1 / -1; }
+        .watchlist-section { grid-column: 1 / -1; }
 
         table.dataTable { width: 100% !important; border-collapse: collapse !important; table-layout: fixed; margin-top: 15px !important; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -158,6 +188,10 @@
         .pl-detail-card:hover { transform: translateY(-3px); }
         .pl-detail-card h4 { margin: 0 0 10px 0; color: var(--secondary-color); border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
         .pl-detail-card p { margin: 0; font-size: 1.2em; font-weight: 600; }
+
+        .watchlist-form-container { display: flex; gap: 10px; margin-bottom: 15px; }
+        .watchlist-form-container input { flex-grow: 1; }
+        .watchlist-form-container button { width: auto; }
         
         .table-responsive-wrapper { overflow-x: auto; }
         
@@ -168,85 +202,34 @@
         .paginate_button.current, .paginate_button.current:hover { background: var(--secondary-color) !important; color: white !important; border: 1px solid var(--secondary-color) !important; }
         .paginate_button:hover { background: var(--primary-color) !important; border-color: var(--border-color) !important; }
 
-        @media (max-width: 1400px) { .grid-container, .stat-grid { grid-template-columns: repeat(4, 1fr); } }
+        @media (max-width: 1400px) { .grid-container, .watchlist-container, .stat-grid { grid-template-columns: repeat(4, 1fr); } }
         
         @media (max-width: 900px) { 
-            .grid-container, .chart-container, .settings-container, .stat-grid, .tools-container { display: flex; flex-direction: column; } 
+            .grid-container, .watchlist-container, .chart-container, .settings-container, .stat-grid, .tools-container { display: flex; flex-direction: column; } 
             
-            /* Responsive table styles */
-            .responsive-table thead {
-                display: none;
-            }
-            .responsive-table tr {
-                display: block;
-                border: 1px solid var(--border-color);
-                border-radius: 8px;
-                margin-bottom: 15px;
-                padding: 15px;
-            }
-            .responsive-table tfoot {
-                display: none; /* Hide footer on mobile cards */
-            }
+            .responsive-table thead { display: none; }
+            .responsive-table tr { display: block; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 15px; padding: 15px; }
+            .responsive-table tfoot { display: none; }
             .responsive-table td {
-                display: flex;
-                justify-content: space-between;
-                text-align: right;
-                font-size: 0.9em;
-                padding: 10px 5px;
-                border-bottom: 1px solid var(--primary-color);
-                white-space: normal;
-                overflow: visible;
-                text-overflow: clip;
+                display: flex; justify-content: space-between; text-align: right; font-size: 0.9em; padding: 10px 5px;
+                border-bottom: 1px solid var(--primary-color); white-space: normal; overflow: visible; text-overflow: clip;
             }
-            .responsive-table td:last-child {
-                border-bottom: none;
-            }
+            .responsive-table td:last-child { border-bottom: none; }
             .responsive-table td::before {
-                content: attr(data-label);
-                font-weight: 600;
-                color: var(--font-color-muted);
-                text-align: left;
-                margin-right: 15px;
+                content: attr(data-label); font-weight: 600; color: var(--font-color-muted);
+                text-align: left; margin-right: 15px;
             }
-            .responsive-table td.action-buttons {
-                justify-content: center;
-                padding-top: 15px;
+            .responsive-table td.action-buttons, .responsive-table td[data-label="Pilih"] { justify-content: center; }
+            .responsive-table td.action-buttons::before, .responsive-table td[data-label="Pilih"]::before { display: none; }
+            
+            #portfolio-table, #watchlist-table { border-collapse: separate; border-spacing: 0 15px; margin-top: 0 !important; }
+            #portfolio-table tbody tr, #watchlist-table tbody tr {
+                padding: 0; border: none; background-color: var(--primary-color); border-radius: 8px;
             }
-            .responsive-table td.action-buttons::before {
-                display: none;
-            }
-            .responsive-table td[data-label="Pilih"] {
-                justify-content: center;
-            }
-            .responsive-table td[data-label="Pilih"]::before {
-                display: none;
-            }
-            #portfolio-table {
-                border-collapse: separate;
-                border-spacing: 0 15px;
-                margin-top: 0 !important;
-            }
-             #portfolio-table tbody tr {
-                padding: 0;
-                border: none;
-                background-color: var(--primary-color);
-                border-radius: 8px;
-             }
-             #portfolio-table tbody td {
-                background-color: var(--primary-color);
-                padding: 15px;
-                border: none;
-             }
-            .dataTables_wrapper .dataTables_paginate .paginate_button {
-                padding: 0.4em 0.8em;
-            }
-            .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info {
-                text-align: left;
-                width: 100%;
-            }
-             .dataTables_wrapper .dataTables_filter input {
-                width: 95%;
-            }
+            #portfolio-table tbody td, #watchlist-table tbody td { background-color: var(--primary-color); padding: 15px; border: none; }
+            .dataTables_wrapper .dataTables_paginate .paginate_button { padding: 0.4em 0.8em; }
+            .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info { text-align: left; width: 100%; }
+            .dataTables_wrapper .dataTables_filter input { width: 95%; }
         }
     </style>
 </head>
@@ -259,7 +242,8 @@
             </div>
         </div>
         <nav id="nav-sidebar" class="nav-sidebar">
-            <a class="nav-tab active" data-tab="dashboard"><span>dashboard</span></a>
+            <a class="nav-tab active" data-tab="dashboard"><span>Dashboard</span></a>
+            <a class="nav-tab" data-tab="watchlist"><span>Watchlist</span></a>
             <a class="nav-tab" data-tab="tools"><span>Tools</span></a>
             <a class="nav-tab" data-tab="settings"><span>Settings</span></a>
             <a class="nav-tab" id="theme-toggle"><span id="theme-text">Mode Gelap</span></a>
@@ -269,7 +253,22 @@
             <div id="dashboard-page" class="page-content active">
                 <div class="grid-container">
                     <div class="stat-grid">
-                        <div class="card stat-card" id="total-modal-card"><h3>Modal Aktif</h3><div class="value">-</div></div>
+                        <div class="card stat-card" id="total-modal-card">
+                            <h3>
+                                Modal Aktif
+                                <span id="unrealized-pl-percentage" style="font-size: 0.8em; margin-left: 8px; font-weight: 600;"></span>
+                            </h3>
+                            <div class="value-split">
+                                <div>
+                                    <h4 class="sub-heading">Disetor</h4>
+                                    <div class="value" id="invested-capital-value">-</div>
+                                </div>
+                                <div>
+                                    <h4 class="sub-heading">Saat Ini</h4>
+                                    <div class="value" id="current-capital-value">-</div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="card stat-card" id="rdn-cash-card"><h3>Kas di RDN</h3><div class="value">-</div></div>
                         <div class="card stat-card" id="total-pl-card"><h3>Total P/L</h3><div class="value">-</div></div>
                         <div class="card stat-card" id="win-rate-card"><h3>Win Rate</h3><div class="value">-</div></div>
@@ -280,9 +279,26 @@
                     </div>
                     
                     <section class="card portfolio-section">
-                        <div class="card-header"><h2>Portofolio Saat Ini</h2></div>
+                        <div class="card-header">
+                            <h2>Portofolio Saat Ini</h2>
+                            <button id="refresh-portfolio-btn" class="button btn-refresh"><i class="fas fa-sync"></i><i class="fas fa-spinner fa-spin"></i></button>
+                        </div>
                         <div class="table-responsive-wrapper">
-                             <table id="portfolio-table" class="responsive-table"><thead><tr><th>Aset</th><th>#Beli</th><th>#Jual</th><th>Sisa Lot</th><th>Avg. Price</th><th>Modal</th></tr></thead><tbody></tbody><tfoot></tfoot></table>
+                             <table id="portfolio-table" class="responsive-table">
+                                <thead>
+                                    <tr>
+                                        <th>Aset</th>
+                                        <th>Sisa Lot</th>
+                                        <th>Avg. Price</th>
+                                        <th>Modal</th>
+                                        <th>Harga Saat Ini</th>
+                                        <th>+/- (Rp)</th>
+                                        <th>+/- (%)</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                                <tfoot></tfoot>
+                            </table>
                         </div>
                     </section>
                     <section class="card pl-section"><div class="card-header"><h2>Ringkasan Realisasi</h2><button id="view-pl-detail-btn" class="button btn-detail">Detail</button></div><div class="pl-summary"><div class="pl-item"><h4>Total Untung</h4><div class="pl-value profit" id="total-profit-value">-</div></div><div class="pl-item"><h4>Total Rugi</h4><div class="pl-value loss" id="total-loss-value">-</div></div></div></section>
@@ -294,10 +310,33 @@
                         </div>
                         <div class="table-responsive-wrapper">
                             <table id="history-table" class="display responsive-table">
+                                <thead><tr><th><input type="checkbox" id="select-all-history"></th><th>Tanggal</th><th>Aset</th><th>Tipe</th><th>Lot/Unit</th><th>Harga</th><th>Nilai</th><th>Aksi</th></tr></thead><tbody></tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </div>
+            
+            <div id="watchlist-page" class="page-content">
+                <div class="watchlist-container">
+                    <section class="card watchlist-section">
+                        <div class="card-header">
+                            <h2>Watchlist</h2>
+                             <button id="refresh-watchlist-btn" class="button btn-refresh"><i class="fas fa-sync"></i><i class="fas fa-spinner fa-spin"></i></button>
+                        </div>
+                        <form id="add-watchlist-form" class="watchlist-form-container">
+                            <input type="text" id="watchlist-asset-input" placeholder="Tambah kode saham (e.g., BBCA)" style="text-transform:uppercase" required>
+                            <button type="submit" class="button btn-detail">Tambah</button>
+                        </form>
+                        <div class="table-responsive-wrapper">
+                             <table id="watchlist-table" class="responsive-table">
                                 <thead>
                                     <tr>
-                                        <th><input type="checkbox" id="select-all-history"></th>
-                                        <th>Tanggal</th><th>Aset</th><th>Tipe</th><th>Lot/Unit</th><th>Harga</th><th>Nilai</th><th>Aksi</th>
+                                        <th>Aset</th>
+                                        <th>Harga Saat Ini</th>
+                                        <th>+/- (Rp)</th>
+                                        <th>+/- (%)</th>
+                                        <th>Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -306,6 +345,7 @@
                     </section>
                 </div>
             </div>
+
             <div id="tools-page" class="page-content">
                 <div class="tools-container">
                     <div class="card">
@@ -347,19 +387,31 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Firebase setup
             const firebaseConfig = { apiKey: "AIzaSyBKlHGg5HYyUQPRT1BzVNix_tWGQ_jgq0k", authDomain: "saham-tracker.firebaseapp.com", projectId: "saham-tracker", storageBucket: "saham-tracker.appspot.com", messagingSenderId: "317401870829", appId: "1:317401870829:web:eb5fe32a87a78cc8c637e4" };
             firebase.initializeApp(firebaseConfig);
             const db = firebase.firestore();
+            const EOD_API_KEY = '686231880e9952.63982103';
 
-            let allTransactions = [], initialCapital = 0, allCashflows = [], csvPreviewData = [], lastAnalysisResult = null, historyDataTable = null;
-            const formatCurrency = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+            // State variables
+            let allTransactions = [], initialCapital = 0, allCashflows = [], marketData = {}, watchlist = [], lastAnalysisResult = null, historyDataTable = null, csvPreviewData = [];
+            
+            // Formatters
+            const formatCurrency = (number, withRp = true) => {
+                if (isNaN(number)) return '-';
+                const options = { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 };
+                if (!withRp) {
+                    return new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0 }).format(number);
+                }
+                return new Intl.NumberFormat('id-ID', options).format(number);
+            }
 
+            // UI Elements
             const ui = {
                 transactionModal: document.getElementById('transaction-modal'), recapModal: document.getElementById('recap-modal'), plDetailModal: document.getElementById('pl-detail-modal'), importPreviewModal: document.getElementById('import-preview-modal'),
                 navSidebar: document.getElementById('nav-sidebar'), hamburgerMenu: document.querySelector('.hamburger-menu'),
                 navTabs: document.querySelectorAll('.nav-tab'), pages: document.querySelectorAll('.page-content'),
                 fab: document.getElementById('fab-add-transaction'), viewPlDetailBtn: document.getElementById('view-pl-detail-btn'),
-                portfolioTable: { body: document.querySelector("#portfolio-table tbody"), foot: document.querySelector("#portfolio-table tfoot") },
                 plDetailGrid: document.getElementById('pl-detail-grid'),
                 historyTable: { table: document.getElementById('history-table') },
                 recapTable: { body: document.querySelector("#recap-table tbody"), foot: document.querySelector("#recap-table tfoot") },
@@ -372,9 +424,16 @@
                 hargaInput: document.getElementById('harga'),
                 dividenAmountInput: document.getElementById('dividen-amount'),
                 statCards: { 
-                    modal: document.getElementById('total-modal-card')?.querySelector('.value'), rdn: document.getElementById('rdn-cash-card')?.querySelector('.value'), pl: document.getElementById('total-pl-card')?.querySelector('.value'), 
-                    winRate: document.getElementById('win-rate-card')?.querySelector('.value'), profitFactor: document.getElementById('profit-factor-card')?.querySelector('.value'),
-                    avgHold: document.getElementById('avg-hold-card')?.querySelector('.value'), bestTrade: document.getElementById('best-trade-card'), worstTrade: document.getElementById('worst-trade-card'),
+                    investedCapital: document.getElementById('invested-capital-value'),
+                    currentCapital: document.getElementById('current-capital-value'),
+                    unrealizedPLPercentage: document.getElementById('unrealized-pl-percentage'),
+                    rdn: document.getElementById('rdn-cash-card')?.querySelector('.value'), 
+                    pl: document.getElementById('total-pl-card')?.querySelector('.value'), 
+                    winRate: document.getElementById('win-rate-card')?.querySelector('.value'), 
+                    profitFactor: document.getElementById('profit-factor-card')?.querySelector('.value'),
+                    avgHold: document.getElementById('avg-hold-card')?.querySelector('.value'), 
+                    bestTrade: document.getElementById('best-trade-card'), 
+                    worstTrade: document.getElementById('worst-trade-card'),
                 },
                 plSummary: { profit: document.getElementById('total-profit-value'), loss: document.getElementById('total-loss-value') },
                 themeToggle: document.getElementById('theme-toggle'), themeText: document.getElementById('theme-text'),
@@ -384,80 +443,130 @@
                 exportBtn: document.getElementById('export-csv-btn'), importInput: document.getElementById('import-csv-input'), downloadTemplateBtn: document.getElementById('download-template-btn'),
                 importPreview: { table: document.getElementById('import-preview-table'), confirmBtn: document.getElementById('confirm-import-btn'), cancelBtn: document.getElementById('cancel-import-btn') },
                 deleteSelectedBtn: document.getElementById('delete-selected-btn'),
+                portfolioTable: { body: document.querySelector("#portfolio-table tbody"), foot: document.querySelector("#portfolio-table tfoot") },
+                watchlistTableBody: document.querySelector("#watchlist-table tbody"),
+                refreshPortfolioBtn: document.getElementById('refresh-portfolio-btn'),
+                refreshWatchlistBtn: document.getElementById('refresh-watchlist-btn'),
+                addWatchlistForm: document.getElementById('add-watchlist-form'),
+                watchlistAssetInput: document.getElementById('watchlist-asset-input'),
             };
-
-            let currentHeatmapDate = new Date();
-
-            // Event Listeners
-            ui.hamburgerMenu.addEventListener('click', () => ui.navSidebar.classList.toggle('active'));
-            ui.navSidebar.addEventListener('click', (e) => {
-                const tab = e.target.closest('.nav-tab');
-                if (!tab) return;
-                if (tab.dataset.tab) switchTab(tab.dataset.tab);
-                else if (tab.id === 'theme-toggle') { let newTheme = document.body.classList.contains('light-mode') ? 'dark-mode' : 'light-mode'; localStorage.setItem('theme', newTheme); updateThemeUI(newTheme); }
-            });
-
-            if(ui.fab) ui.fab.onclick = () => openModal();
-            document.querySelectorAll('.modal-close').forEach(el => el.onclick = () => el.closest('.modal').style.display = 'none');
-            window.onclick = (e) => { if (e.target.classList.contains('modal')) e.target.style.display = 'none'; };
-            if(ui.heatmap.prevBtn) ui.heatmap.prevBtn.onclick = () => { currentHeatmapDate.setMonth(currentHeatmapDate.getMonth() - 1); renderHeatmap(allTransactions); };
-            if(ui.heatmap.nextBtn) ui.heatmap.nextBtn.onclick = () => { currentHeatmapDate.setMonth(currentHeatmapDate.getMonth() + 1); renderHeatmap(allTransactions); };
-            if(ui.exportBtn) ui.exportBtn.onclick = () => exportToCSV(allTransactions);
-            if(ui.downloadTemplateBtn) ui.downloadTemplateBtn.onclick = downloadCSVTemplate;
-            if(ui.importInput) ui.importInput.onchange = (e) => importFromCSV(e.target.files[0]);
-            if(ui.importPreview.confirmBtn) ui.importPreview.confirmBtn.onclick = confirmImport;
-            if(ui.importPreview.cancelBtn) ui.importPreview.cancelBtn.onclick = () => closeModal(ui.importPreviewModal);
             
-            if(ui.historyTable.table) {
-                ui.historyTable.table.addEventListener('change', (e) => {
-                    if(e.target.matches('.history-checkbox, #select-all-history')) {
-                         const isSelectAll = e.target.id === 'select-all-history';
-                        ui.historyTable.table.querySelectorAll('.history-checkbox').forEach(cb => cb.checked = isSelectAll ? e.target.checked : cb.checked);
-                        const checkboxes = ui.historyTable.table.querySelectorAll('.history-checkbox:checked');
-                        if(ui.deleteSelectedBtn) ui.deleteSelectedBtn.style.display = checkboxes.length > 0 ? 'inline-flex' : 'none';
+            let currentHeatmapDate = new Date();
+            let equityChart, allocationChart;
+
+            // --- EVENT LISTENERS ---
+            function setupEventListeners() {
+                ui.hamburgerMenu.addEventListener('click', () => ui.navSidebar.classList.toggle('active'));
+                ui.navSidebar.addEventListener('click', (e) => {
+                    const tab = e.target.closest('.nav-tab');
+                    if (!tab) return;
+                    if (tab.dataset.tab) switchTab(tab.dataset.tab);
+                    else if (tab.id === 'theme-toggle') { let newTheme = document.body.classList.contains('light-mode') ? 'dark-mode' : 'light-mode'; localStorage.setItem('theme', newTheme); updateThemeUI(newTheme); }
+                });
+
+                if(ui.fab) ui.fab.onclick = () => openModal();
+                document.querySelectorAll('.modal-close').forEach(el => el.onclick = () => el.closest('.modal').style.display = 'none');
+                window.onclick = (e) => { if (e.target.classList.contains('modal')) e.target.style.display = 'none'; };
+                
+                if(ui.refreshPortfolioBtn) ui.refreshPortfolioBtn.onclick = () => {
+                    if (lastAnalysisResult && lastAnalysisResult.portfolioData) {
+                         refreshMarketData(lastAnalysisResult.portfolioData.map(p => p.aset), ui.refreshPortfolioBtn);
+                    }
+                }
+                if(ui.refreshWatchlistBtn) ui.refreshWatchlistBtn.onclick = () => refreshMarketData(watchlist, ui.refreshWatchlistBtn);
+                if(ui.addWatchlistForm) ui.addWatchlistForm.addEventListener('submit', handleAddToWatchlist);
+                if(ui.transactionForm) ui.transactionForm.addEventListener('submit', handleTransactionSubmit);
+                if(ui.transactionTypeSelect) ui.transactionTypeSelect.addEventListener('change', (e) => toggleTransactionFields(e.target.value));
+
+                // Tools & Settings Listeners
+                if(ui.heatmap.prevBtn) ui.heatmap.prevBtn.onclick = () => { currentHeatmapDate.setMonth(currentHeatmapDate.getMonth() - 1); renderHeatmap(allTransactions); };
+                if(ui.heatmap.nextBtn) ui.heatmap.nextBtn.onclick = () => { currentHeatmapDate.setMonth(currentHeatmapDate.getMonth() + 1); renderHeatmap(allTransactions); };
+                if(ui.exportBtn) ui.exportBtn.onclick = () => exportToCSV(allTransactions);
+                if(ui.downloadTemplateBtn) ui.downloadTemplateBtn.onclick = downloadCSVTemplate;
+                if(ui.importInput) ui.importInput.onchange = (e) => importFromCSV(e.target.files[0]);
+                if(ui.importPreview.confirmBtn) ui.importPreview.confirmBtn.onclick = confirmImport;
+                if(ui.importPreview.cancelBtn) ui.importPreview.cancelBtn.onclick = () => closeModal(ui.importPreviewModal);
+                if (ui.deleteSelectedBtn) ui.deleteSelectedBtn.onclick = handleBulkDelete;
+                if(ui.historyTable.table) {
+                    ui.historyTable.table.addEventListener('change', (e) => {
+                        if(e.target.matches('.history-checkbox, #select-all-history')) {
+                            const isSelectAll = e.target.id === 'select-all-history';
+                            ui.historyTable.table.querySelectorAll('.history-checkbox').forEach(cb => cb.checked = isSelectAll ? e.target.checked : cb.checked);
+                            const checkboxes = ui.historyTable.table.querySelectorAll('.history-checkbox:checked');
+                            if(ui.deleteSelectedBtn) ui.deleteSelectedBtn.style.display = checkboxes.length > 0 ? 'inline-flex' : 'none';
+                        }
+                    });
+                }
+                if(ui.initialCapitalForm) ui.initialCapitalForm.addEventListener('submit', (e) => { e.preventDefault(); const capital = parseFloat(document.getElementById('initial-capital').value); db.collection('settings').doc('capital').set({ initial: capital }); });
+                if(ui.cashFlowForm) ui.cashFlowForm.addEventListener('submit', (e) => { e.preventDefault(); db.collection('cashflow').add({ tipe: document.getElementById('cash-flow-type').value, jumlah: parseFloat(document.getElementById('cash-flow-amount').value), tanggal: document.getElementById('cash-flow-date').value }); ui.cashFlowForm.reset(); });
+            }
+
+            // --- DATA INITIALIZATION & SYNC ---
+            function initializeAndSyncData() {
+                db.collection('transactions').orderBy('tanggal', 'asc').onSnapshot(snapshot => {
+                    allTransactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    processAndRenderAll();
+                });
+
+                Promise.all([
+                    db.collection('settings').doc('capital').get(),
+                    db.collection('cashflow').orderBy('tanggal', 'asc').get(),
+                    db.collection('marketData').get()
+                ]).then(([capitalSnapshot, cashflowSnapshot, marketDataSnapshot]) => {
+                    initialCapital = capitalSnapshot.exists ? capitalSnapshot.data().initial : 0;
+                    allCashflows = cashflowSnapshot.docs.map(doc => doc.data());
+                    marketDataSnapshot.forEach(doc => { marketData[doc.id] = doc.data(); });
+                    processAndRenderAll();
+                });
+                
+                db.collection('marketData').onSnapshot(snapshot => {
+                    snapshot.docChanges().forEach(change => { marketData[change.doc.id] = change.doc.data(); });
+                    if (lastAnalysisResult) {
+                        processAndRenderAll();
                     }
                 });
-            }
-            if (ui.deleteSelectedBtn) ui.deleteSelectedBtn.onclick = handleBulkDelete;
 
-            // Inisialisasi Data
-            db.collection('transactions').orderBy('tanggal', 'asc').onSnapshot(snapshot => {
-                 const transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                 allTransactions = transactions;
-                 Promise.all([
-                     db.collection('settings').doc('capital').get(),
-                     db.collection('cashflow').orderBy('tanggal', 'asc').get()
-                 ]).then(([capitalSnapshot, cashflowSnapshot]) => {
-                     initialCapital = capitalSnapshot.exists ? capitalSnapshot.data().initial : 0;
-                     allCashflows = cashflowSnapshot.docs.map(doc => doc.data());
-                     processAndRenderAll(allTransactions, initialCapital, allCashflows);
-                 });
-             });
+                db.collection('watchlist').onSnapshot(snapshot => {
+                    watchlist = snapshot.docs.map(doc => doc.id);
+                    renderWatchlistTable();
+                });
+            }
+            
+            // --- CORE LOGIC & ANALYSIS ---
+            function processAndRenderAll() {
+                if (!allTransactions) return;
+                lastAnalysisResult = analyzeData(allTransactions, initialCapital, allCashflows);
+                renderStatCards(lastAnalysisResult);
+                renderPortfolioTable(lastAnalysisResult.portfolioData);
+                renderPLSummary(lastAnalysisResult.totalProfit, lastAnalysisResult.totalLoss);
+                if(ui.viewPlDetailBtn) ui.viewPlDetailBtn.onclick = () => renderPLDetailModal(lastAnalysisResult.plData);
+                renderHistoryTable(allTransactions);
+                renderEquityChart(lastAnalysisResult.equityData);
+                renderAllocationChart(lastAnalysisResult.portfolioData);
+                renderHeatmap(allTransactions);
+            }
             
             function analyzeData(transactions, initialCapital, cashflows) {
                 const groupedByAset = transactions.reduce((acc, t) => { (acc[t.aset] = acc[t.aset] || []).push(t); return acc; }, {});
-                let portfolioData = [], plData = [], totalPortfolioModal = 0, totalRealizedPL = 0, winningTrades = 0, losingTrades = 0, totalProfit = 0, totalLoss = 0, bestTrade = 0, worstTrade = 0;
+                let portfolioData = [], plData = [], totalPortfolioModal = 0, currentPortfolioValue = 0, totalRealizedPL = 0, winningTrades = 0, losingTrades = 0, totalProfit = 0, totalLoss = 0, bestTrade = 0, worstTrade = 0;
                 let totalHoldingDays = 0, totalLotsSold = 0, cashBalance = initialCapital, tradeDetails = [];
 
                 cashflows.forEach(cf => { cashBalance += cf.tipe === 'Setor' ? cf.jumlah : -cf.jumlah; });
                 transactions.forEach(tx => {
-                    if (tx.tipe === 'Beli') cashBalance -= (tx.lot * 100 * tx.harga + tx.biaya);
-                    else if (tx.tipe === 'Jual') cashBalance += (tx.lot * 100 * tx.harga - tx.biaya);
+                    if (tx.tipe === 'Beli') cashBalance -= (tx.lot * 100 * tx.harga + (tx.biaya || 0));
+                    else if (tx.tipe === 'Jual') cashBalance += (tx.lot * 100 * tx.harga - (tx.biaya || 0));
                     else if (tx.tipe === 'Dividen') cashBalance += tx.jumlah;
                 });
 
                 for (const aset in groupedByAset) {
-                    const txs = groupedByAset[aset];
+                    const txs = [...groupedByAset[aset]].sort((a,b) => new Date(a.tanggal) - new Date(b.tanggal));
                     let realizedPLForAsset = 0; let buys = [];
-                    let cycleBuyCount = 0, cycleSellCount = 0;
                     txs.forEach(tx => {
                         if (tx.tipe === 'Beli') {
-                            buys.push({ lot: tx.lot, cost: tx.lot * 100 * tx.harga + tx.biaya, date: new Date(tx.tanggal) });
-                            cycleBuyCount++;
+                            buys.push({ lot: tx.lot, cost: tx.lot * 100 * tx.harga + (tx.biaya || 0), date: new Date(tx.tanggal) });
                         } else if (tx.tipe === 'Jual') {
-                            let lotToSell = tx.lot, revenue = tx.lot * 100 * tx.harga - tx.biaya, costOfSoldLots = 0;
+                            let lotToSell = tx.lot, revenue = tx.lot * 100 * tx.harga - (tx.biaya || 0), costOfSoldLots = 0;
                             const sellDate = new Date(tx.tanggal);
-                             cycleSellCount++;
                             while (lotToSell > 0 && buys.length > 0) {
                                 const firstBuy = buys[0], lotFromThisBuy = Math.min(lotToSell, firstBuy.lot), costPerLot = firstBuy.cost / firstBuy.lot;
                                 const holdingDays = (sellDate - firstBuy.date) / (1000 * 3600 * 24);
@@ -469,56 +578,183 @@
                             }
                             totalLotsSold += tx.lot;
                             const tradePL = revenue - costOfSoldLots;
-                            tradeDetails.push({ pl: tradePL }); // Removed tags
+                            tradeDetails.push({ pl: tradePL });
                             realizedPLForAsset += tradePL;
                             if(tradePL > 0) { winningTrades++; totalProfit += tradePL; if(tradePL > bestTrade) bestTrade = tradePL; } 
-                            else { losingTrades++; if(tradePL < worstTrade) worstTrade = tradePL; }
+                            else { losingTrades++; totalLoss += tradePL; if(tradePL < worstTrade) worstTrade = tradePL; }
                         } else if (tx.tipe === 'Dividen') { realizedPLForAsset += tx.jumlah; totalProfit += tx.jumlah; }
                     });
-                    let sisaLot = 0, totalModal = 0;
-                    buys.forEach(buy => { sisaLot += buy.lot; totalModal += buy.cost; });
+                    let sisaLot = 0, modalDisetor = 0;
+                    buys.forEach(buy => { sisaLot += buy.lot; modalDisetor += buy.cost; });
                     if (sisaLot > 1e-7) {
-                        const avgPriceBeli = totalModal / (sisaLot * 100);
-                        portfolioData.push({ aset, sisaLot, avgPriceBeli, totalModal, buyCount: cycleBuyCount, sellCount: cycleSellCount });
-                        totalPortfolioModal += totalModal;
+                        const avgPriceBeli = modalDisetor / (sisaLot * 100);
+                        portfolioData.push({ aset, sisaLot: parseFloat(sisaLot.toFixed(2)), avgPriceBeli, totalModal: modalDisetor });
+                        totalPortfolioModal += modalDisetor;
+                        const currentPrice = marketData[aset]?.close || avgPriceBeli;
+                        currentPortfolioValue += sisaLot * 100 * currentPrice;
                     }
                     if (realizedPLForAsset !== 0) plData.push({ aset, plRealisasi: realizedPLForAsset });
                     totalRealizedPL += realizedPLForAsset;
                 }
                 
-                totalLoss = Math.abs(totalRealizedPL - totalProfit);
                 let cumulativePL = 0; const equityData = [];
-                transactions.forEach(tx => {
-                    if (tx.tipe !== 'Beli') { cumulativePL += getRealizedPLForTx(tx, transactions); equityData.push({ date: tx.tanggal, pnl: cumulativePL }); }
+                [...allTransactions].sort((a,b) => new Date(a.tanggal) - new Date(b.tanggal)).forEach(tx => {
+                    if (tx.tipe !== 'Beli') { cumulativePL += getRealizedPLForTx(tx, allTransactions); equityData.push({ date: tx.tanggal, pnl: cumulativePL }); }
                 });
                 
                 const winRate = (winningTrades + losingTrades > 0) ? (winningTrades / (winningTrades + losingTrades)) * 100 : 0;
-                const profitFactor = totalLoss > 0 ? totalProfit / totalLoss : Infinity;
+                const profitFactor = totalLoss !== 0 ? Math.abs(totalProfit / totalLoss) : Infinity;
                 const avgHold = totalLotsSold > 0 ? totalHoldingDays / totalLotsSold : 0;
+                const unrealizedPL = currentPortfolioValue - totalPortfolioModal;
+                const unrealizedPLPercentage = totalPortfolioModal > 0 ? (unrealizedPL / totalPortfolioModal) * 100 : 0;
                 
-                return { portfolioData, plData, equityData, totalPortfolioModal, rdnCash: cashBalance, totalRealizedPL, winRate, profitFactor, totalProfit, totalLoss, bestTrade, worstTrade, avgHold, tradeDetails };
+                return { portfolioData, plData, equityData, totalPortfolioModal, currentPortfolioValue, unrealizedPLPercentage, rdnCash: cashBalance, totalRealizedPL, winRate, profitFactor, totalProfit, totalLoss, bestTrade, worstTrade, avgHold, tradeDetails };
             }
 
-            function processAndRenderAll(transactions, capital, cashflows) {
-                lastAnalysisResult = analyzeData(transactions, capital, cashflows);
-                renderStatCards(lastAnalysisResult);
-                renderPortfolioTable(lastAnalysisResult.portfolioData);
-                renderPLSummary(lastAnalysisResult.totalProfit, lastAnalysisResult.totalLoss);
-                if(ui.viewPlDetailBtn) ui.viewPlDetailBtn.onclick = () => renderPLDetailModal(lastAnalysisResult.plData);
-                renderHistoryTable(transactions);
-                renderEquityChart(lastAnalysisResult.equityData);
-                renderAllocationChart(lastAnalysisResult.portfolioData);
-                renderHeatmap(transactions);
+            // --- RENDER FUNCTIONS ---
+            function renderStatCards(analysis) {
+                for (const card in ui.statCards) { if(!ui.statCards[card]) continue; }
+
+                if(ui.statCards.investedCapital) ui.statCards.investedCapital.textContent = formatCurrency(analysis.totalPortfolioModal);
+                if(ui.statCards.currentCapital) {
+                    ui.statCards.currentCapital.textContent = formatCurrency(analysis.currentPortfolioValue);
+                    ui.statCards.currentCapital.className = `value ${analysis.currentPortfolioValue >= analysis.totalPortfolioModal ? 'profit' : 'loss'}`;
+                }
+                if(ui.statCards.unrealizedPLPercentage) {
+                    const percent = analysis.unrealizedPLPercentage;
+                    if (analysis.totalPortfolioModal > 0) {
+                        ui.statCards.unrealizedPLPercentage.textContent = `(${percent >= 0 ? '+' : ''}${percent.toFixed(2)}%)`;
+                        ui.statCards.unrealizedPLPercentage.className = percent >= 0 ? 'profit' : 'loss';
+                    } else {
+                        ui.statCards.unrealizedPLPercentage.textContent = '';
+                    }
+                }
+                
+                ui.statCards.rdn.textContent = formatCurrency(analysis.rdnCash); 
+                ui.statCards.pl.textContent = formatCurrency(analysis.totalRealizedPL); 
+                ui.statCards.pl.className = `value ${analysis.totalRealizedPL >= 0 ? 'profit' : 'loss'}`;
+                ui.statCards.winRate.textContent = `${analysis.winRate.toFixed(1)}%`; 
+                ui.statCards.profitFactor.textContent = isFinite(analysis.profitFactor) ? analysis.profitFactor.toFixed(2) : '∞';
+                const bestTradeValueEl = ui.statCards.bestTrade.querySelector('.value');
+                bestTradeValueEl.textContent = formatCurrency(analysis.bestTrade);
+                const worstTradeValueEl = ui.statCards.worstTrade.querySelector('.value');
+                worstTradeValueEl.textContent = formatCurrency(analysis.worstTrade);
+                ui.statCards.avgHold.textContent = `${analysis.avgHold.toFixed(1)} Hari`;
+            }
+
+            function renderPortfolioTable(data) {
+                if (!ui.portfolioTable.body) return;
+                ui.portfolioTable.body.innerHTML = ''; 
+                data.forEach(item => {
+                    const currentPriceData = marketData[item.aset] || {};
+                    const price = currentPriceData.close || 0;
+                    const change = currentPriceData.change || 0;
+                    const changePercent = currentPriceData.change_p || 0;
+                    const changeClass = change >= 0 ? 'profit' : 'loss';
+
+                    ui.portfolioTable.body.innerHTML += `
+                    <tr>
+                        <td data-label="Aset">${item.aset}</td>
+                        <td data-label="Sisa Lot">${item.sisaLot.toLocaleString('id-ID')}</td>
+                        <td data-label="Avg. Price">${formatCurrency(item.avgPriceBeli, false)}</td>
+                        <td data-label="Modal">${formatCurrency(item.totalModal, false)}</td>
+                        <td data-label="Harga Saat Ini">${price > 0 ? formatCurrency(price, false) : '-'}</td>
+                        <td data-label="+/- (Rp)" class="${changeClass}">${price > 0 ? formatCurrency(change, false) : '-'}</td>
+                        <td data-label="+/- (%)" class="${changeClass}">${price > 0 ? changePercent.toFixed(2) + '%' : '-'}</td>
+                    </tr>`;
+                });
             }
             
+            function renderWatchlistTable() {
+                if (!ui.watchlistTableBody) return;
+                ui.watchlistTableBody.innerHTML = '';
+                watchlist.sort().forEach(aset => {
+                    const currentPriceData = marketData[aset] || {};
+                    const price = currentPriceData.close || 0;
+                    const change = currentPriceData.change || 0;
+                    const changePercent = currentPriceData.change_p || 0;
+                    const changeClass = change >= 0 ? 'profit' : 'loss';
+
+                    ui.watchlistTableBody.innerHTML += `
+                    <tr>
+                        <td data-label="Aset">${aset}</td>
+                        <td data-label="Harga Saat Ini">${price > 0 ? formatCurrency(price, false) : '-'}</td>
+                        <td data-label="+/- (Rp)" class="${changeClass}">${price > 0 ? formatCurrency(change, false) : '-'}</td>
+                        <td data-label="+/- (%)" class="${changeClass}">${price > 0 ? changePercent.toFixed(2) + '%' : '-'}</td>
+                        <td data-label="Aksi" class="action-buttons"><button class="btn-delete" onclick="handleRemoveFromWatchlist('${aset}')">Hapus</button></td>
+                    </tr>`;
+                });
+            }
+
+            // --- API & DB INTERACTIONS ---
+            async function refreshMarketData(assetList, button) {
+                if (!assetList || assetList.length === 0) return;
+                
+                button.classList.add('loading');
+                const uniqueAssets = [...new Set(assetList)];
+                const promises = uniqueAssets.map(asset => {
+                    const url = `https://eodhistoricaldata.com/api/real-time/${asset}.JK?api_token=${EOD_API_KEY}&fmt=json`;
+                    return fetch(url)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data && data.code && data.close !== undefined) {
+                                return db.collection('marketData').doc(data.code.replace('.JK', '')).set({
+                                    close: data.close,
+                                    change: data.change,
+                                    change_p: data.change_p,
+                                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                                }, { merge: true });
+                            } else {
+                                console.warn(`No valid data for ${asset}`, data);
+                            }
+                        }).catch(err => console.error(`Failed to fetch ${asset}:`, err));
+                });
+
+                await Promise.all(promises);
+                button.classList.remove('loading');
+            }
+            
+            function handleAddToWatchlist(e) {
+                e.preventDefault();
+                const asset = ui.watchlistAssetInput.value.trim().toUpperCase();
+                if (asset) {
+                    db.collection('watchlist').doc(asset).set({ addedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                    ui.watchlistAssetInput.value = '';
+                }
+            }
+
+            window.handleRemoveFromWatchlist = (asset) => {
+                if(confirm(`Yakin ingin menghapus ${asset} dari watchlist?`)) {
+                    db.collection('watchlist').doc(asset).delete();
+                }
+            };
+            
+            // --- UI & UTILITY FUNCTIONS (Added back) ---
+            function switchTab(tabId) {
+                ui.pages.forEach(p => p.classList.remove('active'));
+                ui.navTabs.forEach(t => t.classList.remove('active'));
+                document.getElementById(`${tabId}-page`)?.classList.add('active');
+                document.querySelector(`.nav-tab[data-tab="${tabId}"]`)?.classList.add('active');
+                ui.navSidebar.classList.remove('active');
+            }
+
+            function updateThemeUI(theme) {
+                document.body.className = theme === 'light-mode' ? 'light-mode' : '';
+                if (ui.themeText) ui.themeText.textContent = theme === 'light-mode' ? 'Light Mode' : 'Dark Mode';
+                if (lastAnalysisResult) {
+                    renderEquityChart(lastAnalysisResult.equityData);
+                    renderAllocationChart(lastAnalysisResult.portfolioData);
+                }
+            }
+
             function getRealizedPLForTx(currentTx, allTxs) {
                  if (currentTx.tipe === 'Dividen') return currentTx.jumlah; if (currentTx.tipe === 'Beli') return 0;
                 const assetHistory = allTxs.filter(tx => tx.aset === currentTx.aset && new Date(tx.tanggal) <= new Date(currentTx.tanggal));
                 const buys = []; let realizedPL = 0;
                 assetHistory.forEach(tx => {
-                    if (tx.tipe === 'Beli') buys.push({ lot: tx.lot, cost: tx.lot * 100 * tx.harga + tx.biaya });
+                    if (tx.tipe === 'Beli') buys.push({ lot: tx.lot, cost: tx.lot * 100 * tx.harga + (tx.biaya || 0) });
                     else if (tx.id === currentTx.id) {
-                        let lotToSell = tx.lot, revenue = tx.lot * 100 * tx.harga - tx.biaya, costOfSoldLots = 0;
+                        let lotToSell = tx.lot, revenue = tx.lot * 100 * tx.harga - (tx.biaya || 0), costOfSoldLots = 0;
                         while(lotToSell > 0 && buys.length > 0) {
                             const firstBuy = buys[0], lotFromThisBuy = Math.min(lotToSell, firstBuy.lot), costPerLot = firstBuy.cost / firstBuy.lot;
                             costOfSoldLots += lotFromThisBuy * costPerLot;
@@ -531,55 +767,13 @@
                 });
                 return realizedPL;
             }
-            
-            function renderStatCards(analysis) {
-                for (const card in ui.statCards) { if(!ui.statCards[card]) return; }
-                ui.statCards.modal.textContent = formatCurrency(analysis.totalPortfolioModal); 
-                ui.statCards.rdn.textContent = formatCurrency(analysis.rdnCash);
-                ui.statCards.pl.textContent = formatCurrency(analysis.totalRealizedPL); 
-                ui.statCards.pl.className = `value ${analysis.totalRealizedPL >= 0 ? 'profit' : 'loss'}`;
-                ui.statCards.winRate.textContent = `${analysis.winRate.toFixed(1)}%`; 
-                ui.statCards.profitFactor.textContent = isFinite(analysis.profitFactor) ? analysis.profitFactor.toFixed(2) : '∞';
-                
-                const bestTradeValueEl = ui.statCards.bestTrade.querySelector('.value');
-                bestTradeValueEl.textContent = formatCurrency(analysis.bestTrade);
-                bestTradeValueEl.className = 'value profit';
 
-                const worstTradeValueEl = ui.statCards.worstTrade.querySelector('.value');
-                worstTradeValueEl.textContent = formatCurrency(analysis.worstTrade);
-                worstTradeValueEl.className = 'value loss';
-
-                ui.statCards.avgHold.textContent = `${analysis.avgHold.toFixed(1)} Hari`;
-            }
-            function renderPortfolioTable(data) {
-                ui.portfolioTable.body.innerHTML = ''; const total = data.reduce((sum, item) => sum + item.totalModal, 0);
-                data.forEach(item => {
-                    ui.portfolioTable.body.innerHTML += `<tr>
-                        <td data-label="Aset" class="clickable-asset" onclick="handleRecap('${item.aset}')">${item.aset}</td>
-                        <td data-label="#Beli">${item.buyCount}</td>
-                        <td data-label="#Jual">${item.sellCount}</td>
-                        <td data-label="Sisa Lot">${item.sisaLot.toLocaleString('id-ID')}</td>
-                        <td data-label="Avg. Price">${formatCurrency(item.avgPriceBeli)}</td>
-                        <td data-label="Modal">${formatCurrency(item.totalModal)}</td>
-                    </tr>`;
-                });
-                ui.portfolioTable.foot.innerHTML = `<tr><td><strong>TOTAL</strong></td><td colspan="4"></td><td><strong>${formatCurrency(total)}</strong></td></tr>`;
-            }
             function renderPLSummary(profit, loss) {
                 if(!ui.plSummary.profit || !ui.plSummary.loss) return;
                 ui.plSummary.profit.textContent = formatCurrency(profit);
-                ui.plSummary.loss.textContent = formatCurrency(loss);
+                ui.plSummary.loss.textContent = formatCurrency(Math.abs(loss));
             }
-            function renderPLDetailModal(data) {
-                if(!ui.plDetailGrid) return;
-                ui.plDetailGrid.innerHTML = '';
-                if(data.length === 0) { ui.plDetailGrid.innerHTML = '<p>Belum ada profit/loss yang direalisasikan.</p>'; }
-                data.sort((a,b) => b.plRealisasi - a.plRealisasi).forEach(item => {
-                    const plClass = item.plRealisasi >= 0 ? 'profit' : 'loss';
-                    ui.plDetailGrid.innerHTML += `<div class="pl-detail-card clickable-asset" onclick="handleRecap('${item.aset}')"><h4>${item.aset}</h4><p class="${plClass}">${formatCurrency(item.plRealisasi)}</p></div>`;
-                });
-                ui.plDetailModal.style.display = 'flex';
-            }
+
             function renderHistoryTable(transactions) {
                 if(!ui.historyTable.table) return;
                 if(historyDataTable) historyDataTable.destroy();
@@ -591,7 +785,7 @@
                         <td data-label="Tanggal">${tx.tanggal}</td>
                         <td data-label="Aset">${tx.aset}</td>
                         <td data-label="Tipe">${tx.tipe}</td>
-                        <td data-label="Lot/Unit">${tx.tipe === 'Dividen' ? '-' : tx.lot.toLocaleString('id-ID')}</td>
+                        <td data-label="Lot/Unit">${tx.tipe === 'Dividen' ? '-' : (tx.lot || '').toLocaleString('id-ID')}</td>
                         <td data-label="Harga">${tx.tipe === 'Dividen' ? formatCurrency(tx.jumlah) : formatCurrency(tx.harga)}</td>
                         <td data-label="Nilai">${tx.tipe === 'Dividen' ? '-' : formatCurrency(tx.lot * 100 * tx.harga)}</td>
                         <td data-label="Aksi" class="action-buttons"><button class="btn-edit" onclick="handleEdit('${tx.id}')">E</button><button class="btn-delete" onclick="handleDelete('${tx.id}')">H</button></td>
@@ -599,68 +793,41 @@
                 });
                 historyDataTable = $(ui.historyTable.table).DataTable({ "order": [[ 1, "desc" ]], "pageLength": 5, "searching": true, "lengthChange": false, "columnDefs": [{ "orderable": false, "targets": 0 }], "language": { "search": "", "searchPlaceholder": "Cari..." }, "responsive": false });
             }
-            
-            let equityChart, allocationChart;
-            function renderEquityChart(chartData) {
+
+             function renderEquityChart(chartData) {
                 const ctx = document.getElementById('equityChart')?.getContext('2d'); if(!ctx) return; if(equityChart) equityChart.destroy();
-                equityChart = new Chart(ctx, { type: 'line', data: { datasets: [{ label: 'P/L Kumulatif', data: chartData.map(d => ({x: d.date, y: d.pnl})), borderColor: '#00A8FF', backgroundColor: 'rgba(0, 168, 255, 0.1)', fill: true, tension: 0.1, pointRadius: 2 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'day' }, ticks: { color: getComputedStyle(document.body).getPropertyValue('--font-color-muted'), maxRotation: 0, autoSkip: true, maxTicksLimit: 7 }, grid: { color: getComputedStyle(document.body).getPropertyValue('--border-color') } }, y: { ticks: { color: getComputedStyle(document.body).getPropertyValue('--font-color-muted'), callback: (value) => formatCurrency(value).replace('Rp','').trim() }, grid: { color: getComputedStyle(document.body).getPropertyValue('--border-color') } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `P/L: ${formatCurrency(context.parsed.y)}` } } } } });
+                equityChart = new Chart(ctx, { type: 'line', data: { datasets: [{ label: 'P/L Kumulatif', data: chartData.map(d => ({x: new Date(d.date), y: d.pnl})), borderColor: '#00A8FF', backgroundColor: 'rgba(0, 168, 255, 0.1)', fill: true, tension: 0.1, pointRadius: 2 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'day' }, ticks: { color: getComputedStyle(document.body).getPropertyValue('--font-color-muted'), maxRotation: 0, autoSkip: true, maxTicksLimit: 7 }, grid: { color: getComputedStyle(document.body).getPropertyValue('--border-color') } }, y: { ticks: { color: getComputedStyle(document.body).getPropertyValue('--font-color-muted'), callback: (value) => formatCurrency(value).replace('Rp','').trim() }, grid: { color: getComputedStyle(document.body).getPropertyValue('--border-color') } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `P/L: ${formatCurrency(context.parsed.y)}` } } } } });
             }
+
             function renderAllocationChart(portfolioData) {
                 const ctx = document.getElementById('assetAllocationChart')?.getContext('2d'); if(!ctx) return; if(allocationChart) allocationChart.destroy();
                 allocationChart = new Chart(ctx, { type: 'doughnut', data: { labels: portfolioData.map(p => p.aset), datasets: [{ label: 'Alokasi Modal', data: portfolioData.map(p => p.totalModal), backgroundColor: ['#00A8FF', '#007BFF', '#28a745', '#dc3545', '#ffc107', '#17a2b8', '#6610f2'], borderColor: getComputedStyle(document.body).getPropertyValue('--card-color'), borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { color: getComputedStyle(document.body).getPropertyValue('--font-color'), boxWidth: 10, padding: 10 } } } } });
             }
-            
-            function openModal(isEdit = false, data = {}) {
-                resetForm();
-                ui.modalTitle.textContent = isEdit ? "Edit Transaksi" : "Tambah Transaksi Baru";
-                ui.submitButton.textContent = isEdit ? "Perbarui Transaksi" : "Simpan Transaksi";
-                if(isEdit) {
-                    ui.transactionTypeSelect.value = data.tipe;
-                    toggleTransactionFields(data.tipe);
-                    document.getElementById('edit-id').value = data.id; document.getElementById('tanggal').value = data.tanggal; document.getElementById('aset').value = data.aset; 
-                    if(data.tipe === 'Dividen') { document.getElementById('dividen-amount').value = data.jumlah; }
-                    else { document.getElementById('lot').value = data.lot; document.getElementById('harga').value = data.harga; document.getElementById('biaya').value = data.biaya; }
-                    document.getElementById('keterangan').value = data.keterangan || '';
-                } else {
-                    toggleTransactionFields('Beli');
+
+            function renderPLDetailModal(data) {
+                if(!ui.plDetailGrid) return;
+                ui.plDetailGrid.innerHTML = '';
+                if(!data || data.length === 0) { ui.plDetailGrid.innerHTML = '<p>Belum ada profit/loss yang direalisasikan.</p>'; }
+                else {
+                    data.sort((a,b) => b.plRealisasi - a.plRealisasi).forEach(item => {
+                        const plClass = item.plRealisasi >= 0 ? 'profit' : 'loss';
+                        ui.plDetailGrid.innerHTML += `<div class="pl-detail-card clickable-asset" onclick="handleRecap('${item.aset}')"><h4>${item.aset}</h4><p class="${plClass}">${formatCurrency(item.plRealisasi)}</p></div>`;
+                    });
                 }
-                ui.transactionModal.style.display = 'flex';
+                ui.plDetailModal.style.display = 'flex';
             }
-            
-            function closeModal(modal) { if(modal) modal.style.display = 'none'; }
-            function resetForm() { ui.transactionForm.reset(); document.getElementById('edit-id').value = ''; toggleTransactionFields('Beli'); }
-
-            if(ui.transactionForm) ui.transactionForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const id = document.getElementById('edit-id').value; const type = ui.transactionTypeSelect.value;
-                let transactionData = { tanggal: document.getElementById('tanggal').value, aset: document.getElementById('aset').value.toUpperCase(), tipe: type, keterangan: document.getElementById('keterangan').value };
-                if (type === 'Dividen') {
-                    transactionData.jumlah = parseFloat(ui.dividenAmountInput.value);
-                } else { 
-                    transactionData.lot = parseFloat(ui.lotInput.value); 
-                    transactionData.harga = parseFloat(ui.hargaInput.value); 
-                    transactionData.biaya = parseFloat(document.getElementById('biaya').value) || 0; 
-                }
-                const promise = id ? db.collection('transactions').doc(id).update({ ...transactionData, lastUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()}) : db.collection('transactions').add({ ...transactionData, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
-                promise.then(() => closeModal(ui.transactionModal));
-            });
-
-            window.handleEdit = (id) => db.collection('transactions').doc(id).get().then(doc => doc.exists && openModal(true, {id, ...doc.data()}));
-            window.handleDelete = (id) => confirm('Anda yakin ingin menghapus transaksi ini?') && db.collection('transactions').doc(id).delete();
-            
-            window.handleRecap = (aset) => {
+             window.handleRecap = (aset) => {
                 const assetTransactions = allTransactions.filter(tx => tx.aset === aset);
                 if(assetTransactions.length === 0) return;
-                
                 ui.recapAssetCode.textContent = `Rekapitulasi: ${aset}`;
                 ui.recapTable.body.innerHTML = ''; ui.recapTable.foot.innerHTML = '';
                 let totalRealizedPL = 0; const buys = [];
-                assetTransactions.forEach(tx => {
+                assetTransactions.sort((a,b) => new Date(a.tanggal) - new Date(b.tanggal)).forEach(tx => {
                     const nilai = tx.tipe === 'Dividen' ? tx.jumlah : tx.lot * 100 * tx.harga;
                     ui.recapTable.body.innerHTML += `<tr><td>${tx.tanggal}</td><td>${tx.tipe}</td><td>${tx.tipe === 'Dividen' ? '-' : tx.lot.toLocaleString('id-ID')}</td><td>${tx.tipe === 'Dividen' ? '-' : formatCurrency(tx.harga)}</td><td>${formatCurrency(nilai)}</td></tr>`;
-                    if (tx.tipe === 'Beli') buys.push({ lot: tx.lot, cost: tx.lot * 100 * tx.harga + tx.biaya });
+                    if (tx.tipe === 'Beli') buys.push({ lot: tx.lot, cost: tx.lot * 100 * tx.harga + (tx.biaya || 0) });
                     else if (tx.tipe === 'Jual') {
-                        let lotToSell = tx.lot, revenue = tx.lot * 100 * tx.harga - tx.biaya, costOfSoldLots = 0;
+                        let lotToSell = tx.lot, revenue = tx.lot * 100 * tx.harga - (tx.biaya || 0), costOfSoldLots = 0;
                         while (lotToSell > 0 && buys.length > 0) {
                             const firstBuy = buys[0], lotFromThisBuy = Math.min(lotToSell, firstBuy.lot), costPerLot = firstBuy.cost / firstBuy.lot;
                             costOfSoldLots += lotFromThisBuy * costPerLot;
@@ -671,54 +838,11 @@
                         totalRealizedPL += revenue - costOfSoldLots;
                     } else if (tx.tipe === 'Dividen') totalRealizedPL += tx.jumlah;
                 });
-                
                 const plClass = totalRealizedPL >= 0 ? 'profit' : 'loss';
                 ui.recapTable.foot.innerHTML = `<tr><td colspan="3"><strong>Total P/L Realisasi</strong></td><td colspan="2" class="${plClass}"><strong>${formatCurrency(totalRealizedPL)}</strong></td></tr>`;
                 ui.recapModal.style.display = 'flex';
             };
-            
-            function switchTab(tabId) {
-                ui.navTabs.forEach(t => t.classList.remove('active'));
-                ui.pages.forEach(p => p.classList.remove('active'));
-                const activeTab = document.querySelector(`.nav-tab[data-tab="${tabId}"]`);
-                const activePage = document.getElementById(`${tabId}-page`);
-                if (activeTab) activeTab.classList.add('active');
-                if (activePage) activePage.classList.add('active');
-                ui.navSidebar.classList.remove('active');
-            }
-            
-            if(ui.transactionTypeSelect) ui.transactionTypeSelect.addEventListener('change', (e) => toggleTransactionFields(e.target.value));
-            
-            function toggleTransactionFields(type) {
-                const isDividend = type === 'Dividen';
-                const tradeFields = document.getElementById('trade-fields');
-                const dividenGroup = document.getElementById('group-dividen');
 
-                if(tradeFields) tradeFields.style.display = isDividend ? 'none' : 'block';
-                if(dividenGroup) dividenGroup.style.display = isDividend ? 'block' : 'none';
-
-                // Toggle the 'required' attribute to fix form submission
-                if (ui.lotInput && ui.hargaInput && ui.dividenAmountInput) {
-                    ui.lotInput.required = !isDividend;
-                    ui.hargaInput.required = !isDividend;
-                    ui.dividenAmountInput.required = isDividend;
-                }
-            }
-
-            if(ui.initialCapitalForm) ui.initialCapitalForm.addEventListener('submit', (e) => { e.preventDefault(); const capital = parseFloat(document.getElementById('initial-capital').value); db.collection('settings').doc('capital').set({ initial: capital }); });
-            if(ui.cashFlowForm) ui.cashFlowForm.addEventListener('submit', (e) => { e.preventDefault(); db.collection('cashflow').add({ tipe: document.getElementById('cash-flow-type').value, jumlah: parseFloat(document.getElementById('cash-flow-amount').value), tanggal: document.getElementById('cash-flow-date').value }); ui.cashFlowForm.reset(); });
-            
-            const currentTheme = localStorage.getItem('theme') || 'dark-mode';
-            updateThemeUI(currentTheme);
-            
-            function updateThemeUI(theme) {
-                document.body.className = theme === 'light-mode' ? 'light-mode' : '';
-                if (ui.themeText) ui.themeText.textContent = theme === 'light-mode' ? 'Light Mode' : 'Dark Mode';
-                if (lastAnalysisResult) {
-                    processAndRenderAll(allTransactions, initialCapital, allCashflows);
-                }
-            }
-            
             function renderHeatmap(transactions) {
                 if(!ui.heatmap.container) return;
                 const plByDate = {};
@@ -741,7 +865,7 @@
                         const opacity = Math.min(Math.max(Math.abs(pl) / (maxAbsPL || 1), 0.2), 1);
                         const color = pl > 0 ? `rgba(40, 167, 69, ${opacity})` : `rgba(220, 53, 69, ${opacity})`;
                         cellStyle = `style="background-color: ${color}"`;
-                        plContent = `<div class="day-pl">${formatCurrency(pl).replace('Rp','')}</div>`;
+                        plContent = `<div class="day-pl">${formatCurrency(pl, false)}</div>`;
                     }
                     tableHTML += `<td ${cellStyle}><div class="day-number">${day}</div>${plContent}</td>`;
                     if ((firstDayOfMonth + day) % 7 === 0) tableHTML += `</tr><tr>`;
@@ -749,6 +873,73 @@
                 tableHTML += `</tr></tbody>`; ui.heatmap.container.innerHTML = tableHTML;
             }
 
+            function openModal(isEdit = false, data = {}) {
+                resetForm();
+                ui.modalTitle.textContent = isEdit ? "Edit Transaksi" : "Tambah Transaksi Baru";
+                ui.submitButton.textContent = isEdit ? "Perbarui Transaksi" : "Simpan Transaksi";
+                if(isEdit) {
+                    ui.transactionTypeSelect.value = data.tipe;
+                    toggleTransactionFields(data.tipe);
+                    document.getElementById('edit-id').value = data.id; 
+                    document.getElementById('tanggal').value = data.tanggal; 
+                    document.getElementById('aset').value = data.aset; 
+                    if(data.tipe === 'Dividen') { document.getElementById('dividen-amount').value = data.jumlah; }
+                    else { 
+                        document.getElementById('lot').value = data.lot; 
+                        document.getElementById('harga').value = data.harga; 
+                        document.getElementById('biaya').value = data.biaya; 
+                    }
+                    document.getElementById('keterangan').value = data.keterangan || '';
+                } else {
+                    document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
+                    toggleTransactionFields('Beli');
+                }
+                ui.transactionModal.style.display = 'flex';
+            }
+
+            function closeModal(modal) { if(modal) modal.style.display = 'none'; }
+            function resetForm() { ui.transactionForm.reset(); document.getElementById('edit-id').value = ''; toggleTransactionFields('Beli'); }
+
+            function toggleTransactionFields(type) {
+                const isDividend = type === 'Dividen';
+                const tradeFields = document.getElementById('trade-fields');
+                const dividenGroup = document.getElementById('group-dividen');
+                if(tradeFields) tradeFields.style.display = isDividend ? 'none' : 'block';
+                if(dividenGroup) dividenGroup.style.display = isDividend ? 'block' : 'none';
+                if (ui.lotInput && ui.hargaInput && ui.dividenAmountInput) {
+                    ui.lotInput.required = !isDividend;
+                    ui.hargaInput.required = !isDividend;
+                    ui.dividenAmountInput.required = isDividend;
+                }
+            }
+            
+            function handleTransactionSubmit(e) {
+                e.preventDefault();
+                const id = document.getElementById('edit-id').value; 
+                const type = ui.transactionTypeSelect.value;
+                let transactionData = { 
+                    tanggal: document.getElementById('tanggal').value, 
+                    aset: document.getElementById('aset').value.toUpperCase(), 
+                    tipe: type, 
+                    keterangan: document.getElementById('keterangan').value 
+                };
+                if (type === 'Dividen') {
+                    transactionData.jumlah = parseFloat(ui.dividenAmountInput.value);
+                } else { 
+                    transactionData.lot = parseFloat(ui.lotInput.value); 
+                    transactionData.harga = parseFloat(ui.hargaInput.value); 
+                    transactionData.biaya = parseFloat(document.getElementById('biaya').value) || 0; 
+                }
+                const promise = id 
+                    ? db.collection('transactions').doc(id).update({ ...transactionData, lastUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()}) 
+                    : db.collection('transactions').add({ ...transactionData, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
+                promise.then(() => closeModal(ui.transactionModal));
+            }
+
+            window.handleEdit = (id) => db.collection('transactions').doc(id).get().then(doc => doc.exists && openModal(true, {id, ...doc.data()}));
+            window.handleDelete = (id) => confirm('Anda yakin ingin menghapus transaksi ini?') && db.collection('transactions').doc(id).delete();
+            
+            // CSV functions
             function downloadCSVTemplate() {
                 const headers = ["tanggal", "tipe", "aset", "lot", "harga", "biaya", "jumlah"];
                 const csvContent = "data:text/csv;charset=utf-8," + headers.join(";") + "\r\n";
@@ -757,9 +948,9 @@
                 document.body.appendChild(link); link.click(); document.body.removeChild(link);
             }
             function exportToCSV(transactions) {
-                let csvContent = "data:text/csv;charset=utf-8,"; const headers = ["tanggal", "tipe", "aset", "lot", "harga", "biaya", "jumlah"];
+                let csvContent = "data:text/csv;charset=utf-8,"; const headers = ["tanggal", "tipe", "aset", "lot", "harga", "biaya", "jumlah", "keterangan"];
                 csvContent += headers.join(";") + "\r\n";
-                transactions.forEach(tx => { const row = [tx.tanggal || '', tx.tipe || '', tx.aset || '', tx.lot || 0, tx.harga || 0, tx.biaya || 0, tx.jumlah || 0]; csvContent += row.join(";") + "\r\n"; });
+                transactions.forEach(tx => { const row = [tx.tanggal || '', tx.tipe || '', tx.aset || '', tx.lot || 0, tx.harga || 0, tx.biaya || 0, tx.jumlah || 0, tx.keterangan || '']; csvContent += row.join(";") + "\r\n"; });
                 const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent));
                 link.setAttribute("download", "jurnal_trading.csv");
                 document.body.appendChild(link); link.click(); document.body.removeChild(link);
@@ -784,11 +975,6 @@
                 csvPreviewData.forEach(txData => { const docRef = db.collection("transactions").doc(); batch.set(docRef, {...txData, createdAt: firebase.firestore.FieldValue.serverTimestamp()}); });
                 batch.commit().then(() => { alert('Impor CSV berhasil!'); closeModal(ui.importPreviewModal); }).catch(err => { alert('Gagal mengimpor data.'); console.error(err); });
             }
-            function toggleSelectAll(checked, tableSelector) {
-                const table = $(tableSelector).DataTable();
-                table.rows().nodes().to$().find('input[type="checkbox"]').prop('checked', checked);
-                $(table.rows().nodes().to$().find('input[type="checkbox"]')).trigger('change');
-            }
             function handleBulkDelete() {
                 const checkedCheckboxes = document.querySelectorAll('.history-checkbox:checked');
                 if (checkedCheckboxes.length === 0) return alert('Pilih transaksi yang ingin dihapus.');
@@ -797,6 +983,11 @@
                 checkedCheckboxes.forEach(cb => { const docId = cb.dataset.id; const docRef = db.collection('transactions').doc(docId); batch.delete(docRef); });
                 batch.commit().then(() => { alert('Transaksi terpilih berhasil dihapus.'); ui.deleteSelectedBtn.style.display = 'none'; }).catch(err => { alert('Gagal menghapus transaksi.'); console.error(err); });
             }
+
+            // --- MAIN EXECUTION ---
+            setupEventListeners();
+            initializeAndSyncData();
+            updateThemeUI(localStorage.getItem('theme') || 'dark-mode');
         });
     </script>
 </body>
