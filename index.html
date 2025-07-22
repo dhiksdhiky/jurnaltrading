@@ -63,7 +63,7 @@
         .page-content { display: none; }
         .page-content.active { display: block; }
 
-        .grid-container, .watchlist-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; max-width: 1600px; margin: auto; }
+        .grid-container, .page-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; max-width: 1600px; margin: auto; }
         .tools-container, .settings-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; max-width: 1200px; margin: auto; }
 
         .card {
@@ -82,7 +82,6 @@
         .stat-card h3 { margin: 0 0 5px 0; font-size: 0.8em; color: var(--font-color-muted); text-transform: uppercase; }
         .stat-card .value { font-size: 1.6em; font-weight: 600; }
         
-        /* New styles for split value card */
         .stat-card .value-split {
             display: flex;
             justify-content: space-around;
@@ -131,7 +130,7 @@
         .pl-section { grid-column: 4 / 5; }
         .chart-section { grid-column: 1 / -1; }
         .history-section { grid-column: 1 / -1; }
-        .watchlist-section { grid-column: 1 / -1; }
+        .main-section { grid-column: 1 / -1; }
 
         table.dataTable { width: 100% !important; border-collapse: collapse !important; table-layout: fixed; margin-top: 15px !important; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -188,10 +187,6 @@
         .pl-detail-card:hover { transform: translateY(-3px); }
         .pl-detail-card h4 { margin: 0 0 10px 0; color: var(--secondary-color); border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
         .pl-detail-card p { margin: 0; font-size: 1.2em; font-weight: 600; }
-
-        .watchlist-form-container { display: flex; gap: 10px; margin-bottom: 15px; }
-        .watchlist-form-container input { flex-grow: 1; }
-        .watchlist-form-container button { width: auto; }
         
         .table-responsive-wrapper { overflow-x: auto; }
         
@@ -201,12 +196,23 @@
         .paginate_button { color: var(--font-color) !important; }
         .paginate_button.current, .paginate_button.current:hover { background: var(--secondary-color) !important; color: white !important; border: 1px solid var(--secondary-color) !important; }
         .paginate_button:hover { background: var(--primary-color) !important; border-color: var(--border-color) !important; }
+        
+        /* Forward Test Styles */
+        .forward-test-form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; align-items: flex-end; margin-bottom: 15px; }
+        .forward-test-form-grid .form-group { margin-bottom: 0; }
+        .forward-test-form-grid button { grid-column: 3; justify-self: start; height: 42px; }
+        .status-tp1, .status-tp2 { color: var(--success-color); font-weight: 600; }
+        .status-sl { color: var(--danger-color); font-weight: 600; }
+        .status-running { color: var(--warning-color); }
 
-        @media (max-width: 1400px) { .grid-container, .watchlist-container, .stat-grid { grid-template-columns: repeat(4, 1fr); } }
+
+        @media (max-width: 1400px) { .grid-container, .page-container, .stat-grid { grid-template-columns: repeat(4, 1fr); } }
         
         @media (max-width: 900px) { 
-            .grid-container, .watchlist-container, .chart-container, .settings-container, .stat-grid, .tools-container { display: flex; flex-direction: column; } 
-            
+            .grid-container, .page-container, .chart-container, .settings-container, .stat-grid, .tools-container { display: flex; flex-direction: column; } 
+            .forward-test-form-grid { grid-template-columns: 1fr; }
+            .forward-test-form-grid button { justify-self: stretch; }
+
             .responsive-table thead { display: none; }
             .responsive-table tr { display: block; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 15px; padding: 15px; }
             .responsive-table tfoot { display: none; }
@@ -222,11 +228,11 @@
             .responsive-table td.action-buttons, .responsive-table td[data-label="Pilih"] { justify-content: center; }
             .responsive-table td.action-buttons::before, .responsive-table td[data-label="Pilih"]::before { display: none; }
             
-            #portfolio-table, #watchlist-table { border-collapse: separate; border-spacing: 0 15px; margin-top: 0 !important; }
-            #portfolio-table tbody tr, #watchlist-table tbody tr {
+            #portfolio-table, #forward-test-table { border-collapse: separate; border-spacing: 0 15px; margin-top: 0 !important; }
+            #portfolio-table tbody tr, #forward-test-table tbody tr {
                 padding: 0; border: none; background-color: var(--primary-color); border-radius: 8px;
             }
-            #portfolio-table tbody td, #watchlist-table tbody td { background-color: var(--primary-color); padding: 15px; border: none; }
+            #portfolio-table tbody td, #forward-test-table tbody td { background-color: var(--primary-color); padding: 15px; border: none; }
             .dataTables_wrapper .dataTables_paginate .paginate_button { padding: 0.4em 0.8em; }
             .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info { text-align: left; width: 100%; }
             .dataTables_wrapper .dataTables_filter input { width: 95%; }
@@ -243,7 +249,7 @@
         </div>
         <nav id="nav-sidebar" class="nav-sidebar">
             <a class="nav-tab active" data-tab="dashboard"><span>Dashboard</span></a>
-            <a class="nav-tab" data-tab="watchlist"><span>Watchlist</span></a>
+            <a class="nav-tab" data-tab="forward-test"><span>Forward Testing</span></a>
             <a class="nav-tab" data-tab="tools"><span>Tools</span></a>
             <a class="nav-tab" data-tab="settings"><span>Settings</span></a>
             <a class="nav-tab" id="theme-toggle"><span id="theme-text">Mode Gelap</span></a>
@@ -317,25 +323,36 @@
                 </div>
             </div>
             
-            <div id="watchlist-page" class="page-content">
-                <div class="watchlist-container">
-                    <section class="card watchlist-section">
+            <div id="forward-test-page" class="page-content">
+                <div class="page-container">
+                    <section class="card main-section">
                         <div class="card-header">
-                            <h2>Watchlist</h2>
-                             <button id="refresh-watchlist-btn" class="button btn-refresh"><i class="fas fa-sync"></i><i class="fas fa-spinner fa-spin"></i></button>
+                            <h2>Forward Testing Rekomendasi</h2>
+                             <button id="refresh-forward-test-btn" class="button btn-refresh"><i class="fas fa-sync"></i><i class="fas fa-spinner fa-spin"></i></button>
                         </div>
-                        <form id="add-watchlist-form" class="watchlist-form-container">
-                            <input type="text" id="watchlist-asset-input" placeholder="Tambah kode saham (e.g., BBCA)" style="text-transform:uppercase" required>
-                            <button type="submit" class="button btn-detail">Tambah</button>
+                        <form id="forward-test-form">
+                            <div class="forward-test-form-grid">
+                                <div class="form-group"><label>Kode</label><input type="text" id="ft-kode" placeholder="BBCA" style="text-transform:uppercase" required></div>
+                                <div class="form-group"><label>Tgl. Input</label><input type="date" id="ft-tanggal" required></div>
+                                <div class="form-group"><label>Harga Input</label><input type="number" id="ft-harga" placeholder="9000" required></div>
+                                <div class="form-group"><label>TP 1</label><input type="number" id="ft-tp1" placeholder="9500" required></div>
+                                <div class="form-group"><label>TP 2</label><input type="number" id="ft-tp2" placeholder="10000"></div>
+                                <div class="form-group"><label>Stop Loss</label><input type="number" id="ft-sl" placeholder="8800" required></div>
+                            </div>
+                             <button type="submit" class="button">Tambah Rekomendasi</button>
                         </form>
-                        <div class="table-responsive-wrapper">
-                             <table id="watchlist-table" class="responsive-table">
+                        <div class="table-responsive-wrapper" style="margin-top: 20px;">
+                             <table id="forward-test-table" class="responsive-table">
                                 <thead>
                                     <tr>
-                                        <th>Aset</th>
+                                        <th>Kode</th>
+                                        <th>Tgl. Input</th>
+                                        <th>Harga Input</th>
+                                        <th>TP 1</th>
+                                        <th>TP 2</th>
+                                        <th>SL</th>
                                         <th>Harga Saat Ini</th>
-                                        <th>+/- (Rp)</th>
-                                        <th>+/- (%)</th>
+                                        <th>Status</th>
                                         <th>Aksi</th>
                                     </tr>
                                 </thead>
@@ -394,11 +411,11 @@
             const EOD_API_KEY = '686231880e9952.63982103';
 
             // State variables
-            let allTransactions = [], initialCapital = 0, allCashflows = [], marketData = {}, watchlist = [], lastAnalysisResult = null, historyDataTable = null, csvPreviewData = [];
+            let allTransactions = [], initialCapital = 0, allCashflows = [], marketData = {}, forwardTestData = [], lastAnalysisResult = null, historyDataTable = null, csvPreviewData = [];
             
             // Formatters
             const formatCurrency = (number, withRp = true) => {
-                if (isNaN(number)) return '-';
+                if (isNaN(number) || number === null) return '-';
                 const options = { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 };
                 if (!withRp) {
                     return new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0 }).format(number);
@@ -444,11 +461,10 @@
                 importPreview: { table: document.getElementById('import-preview-table'), confirmBtn: document.getElementById('confirm-import-btn'), cancelBtn: document.getElementById('cancel-import-btn') },
                 deleteSelectedBtn: document.getElementById('delete-selected-btn'),
                 portfolioTable: { body: document.querySelector("#portfolio-table tbody"), foot: document.querySelector("#portfolio-table tfoot") },
-                watchlistTableBody: document.querySelector("#watchlist-table tbody"),
-                refreshPortfolioBtn: document.getElementById('refresh-portfolio-btn'),
-                refreshWatchlistBtn: document.getElementById('refresh-watchlist-btn'),
-                addWatchlistForm: document.getElementById('add-watchlist-form'),
-                watchlistAssetInput: document.getElementById('watchlist-asset-input'),
+                // Forward Test UI
+                refreshForwardTestBtn: document.getElementById('refresh-forward-test-btn'),
+                forwardTestForm: document.getElementById('forward-test-form'),
+                forwardTestTableBody: document.querySelector('#forward-test-table tbody'),
             };
             
             let currentHeatmapDate = new Date();
@@ -473,8 +489,11 @@
                          refreshMarketData(lastAnalysisResult.portfolioData.map(p => p.aset), ui.refreshPortfolioBtn);
                     }
                 }
-                if(ui.refreshWatchlistBtn) ui.refreshWatchlistBtn.onclick = () => refreshMarketData(watchlist, ui.refreshWatchlistBtn);
-                if(ui.addWatchlistForm) ui.addWatchlistForm.addEventListener('submit', handleAddToWatchlist);
+                if(ui.refreshForwardTestBtn) ui.refreshForwardTestBtn.onclick = () => {
+                    const assetsToRefresh = [...new Set([...forwardTestData.map(item => item.kode)])];
+                    refreshMarketData(assetsToRefresh, ui.refreshForwardTestBtn);
+                };
+                if(ui.forwardTestForm) ui.forwardTestForm.addEventListener('submit', handleForwardTestSubmit);
                 if(ui.transactionForm) ui.transactionForm.addEventListener('submit', handleTransactionSubmit);
                 if(ui.transactionTypeSelect) ui.transactionTypeSelect.addEventListener('change', (e) => toggleTransactionFields(e.target.value));
 
@@ -526,9 +545,9 @@
                     }
                 });
 
-                db.collection('watchlist').onSnapshot(snapshot => {
-                    watchlist = snapshot.docs.map(doc => doc.id);
-                    renderWatchlistTable();
+                db.collection('forward_testing').orderBy('tanggal', 'desc').onSnapshot(snapshot => {
+                    forwardTestData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    renderForwardTestingTable();
                 });
             }
             
@@ -544,6 +563,7 @@
                 renderEquityChart(lastAnalysisResult.equityData);
                 renderAllocationChart(lastAnalysisResult.portfolioData);
                 renderHeatmap(allTransactions);
+                renderForwardTestingTable();
             }
             
             function analyzeData(transactions, initialCapital, cashflows) {
@@ -665,26 +685,47 @@
                 });
             }
             
-            function renderWatchlistTable() {
-                if (!ui.watchlistTableBody) return;
-                ui.watchlistTableBody.innerHTML = '';
-                watchlist.sort().forEach(aset => {
-                    const currentPriceData = marketData[aset] || {};
-                    const price = currentPriceData.close || 0;
-                    const change = currentPriceData.change || 0;
-                    const changePercent = currentPriceData.change_p || 0;
-                    const changeClass = change >= 0 ? 'profit' : 'loss';
+            function renderForwardTestingTable() {
+                if (!ui.forwardTestTableBody) return;
+                ui.forwardTestTableBody.innerHTML = '';
+                forwardTestData.forEach(item => {
+                    const currentPriceData = marketData[item.kode] || {};
+                    const currentPrice = currentPriceData.close || 0;
 
-                    ui.watchlistTableBody.innerHTML += `
-                    <tr>
-                        <td data-label="Aset">${aset}</td>
-                        <td data-label="Harga Saat Ini">${price > 0 ? formatCurrency(price, false) : '-'}</td>
-                        <td data-label="+/- (Rp)" class="${changeClass}">${price > 0 ? formatCurrency(change, false) : '-'}</td>
-                        <td data-label="+/- (%)" class="${changeClass}">${price > 0 ? changePercent.toFixed(2) + '%' : '-'}</td>
-                        <td data-label="Aksi" class="action-buttons"><button class="btn-delete" onclick="handleRemoveFromWatchlist('${aset}')">Hapus</button></td>
-                    </tr>`;
+                    let status = 'Running';
+                    let statusClass = 'status-running';
+
+                    if (currentPrice > 0) {
+                        if (item.tp2 && currentPrice >= item.tp2) {
+                            status = 'TP 2 Hit';
+                            statusClass = 'status-tp2';
+                        } else if (item.tp1 && currentPrice >= item.tp1) {
+                            status = 'TP 1 Hit';
+                            statusClass = 'status-tp1';
+                        } else if (item.sl && currentPrice <= item.sl) {
+                            status = 'SL Hit';
+                            statusClass = 'status-sl';
+                        }
+                    }
+
+                    ui.forwardTestTableBody.innerHTML += `
+                        <tr>
+                            <td data-label="Kode">${item.kode}</td>
+                            <td data-label="Tgl. Input">${item.tanggal}</td>
+                            <td data-label="Harga Input">${formatCurrency(item.harga, false)}</td>
+                            <td data-label="TP 1">${formatCurrency(item.tp1, false)}</td>
+                            <td data-label="TP 2">${formatCurrency(item.tp2, false)}</td>
+                            <td data-label="SL">${formatCurrency(item.sl, false)}</td>
+                            <td data-label="Harga Saat Ini">${currentPrice > 0 ? formatCurrency(currentPrice, false) : '-'}</td>
+                            <td data-label="Status"><span class="${statusClass}">${status}</span></td>
+                            <td data-label="Aksi" class="action-buttons">
+                                <button class="btn-delete" onclick="handleDeleteForwardTest('${item.id}')">Hapus</button>
+                            </td>
+                        </tr>
+                    `;
                 });
             }
+
 
             // --- API & DB INTERACTIONS ---
             async function refreshMarketData(assetList, button) {
@@ -693,6 +734,7 @@
                 button.classList.add('loading');
                 const uniqueAssets = [...new Set(assetList)];
                 const promises = uniqueAssets.map(asset => {
+                    if (!asset) return Promise.resolve(); // Skip if asset is undefined/null
                     const url = `https://eodhistoricaldata.com/api/real-time/${asset}.JK?api_token=${EOD_API_KEY}&fmt=json`;
                     return fetch(url)
                         .then(res => res.json())
@@ -714,18 +756,33 @@
                 button.classList.remove('loading');
             }
             
-            function handleAddToWatchlist(e) {
+            function handleForwardTestSubmit(e) {
                 e.preventDefault();
-                const asset = ui.watchlistAssetInput.value.trim().toUpperCase();
-                if (asset) {
-                    db.collection('watchlist').doc(asset).set({ addedAt: firebase.firestore.FieldValue.serverTimestamp() });
-                    ui.watchlistAssetInput.value = '';
+                const data = {
+                    kode: document.getElementById('ft-kode').value.toUpperCase(),
+                    tanggal: document.getElementById('ft-tanggal').value,
+                    harga: parseFloat(document.getElementById('ft-harga').value),
+                    tp1: parseFloat(document.getElementById('ft-tp1').value),
+                    tp2: parseFloat(document.getElementById('ft-tp2').value) || null,
+                    sl: parseFloat(document.getElementById('ft-sl').value),
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                if (data.kode && data.tanggal && data.harga && data.tp1 && data.sl) {
+                    db.collection('forward_testing').add(data)
+                        .then(() => {
+                            ui.forwardTestForm.reset();
+                            document.getElementById('ft-tanggal').value = new Date().toISOString().split('T')[0];
+                        })
+                        .catch(err => console.error("Error adding forward test: ", err));
+                } else {
+                    alert('Harap isi semua field yang wajib diisi.');
                 }
             }
 
-            window.handleRemoveFromWatchlist = (asset) => {
-                if(confirm(`Yakin ingin menghapus ${asset} dari watchlist?`)) {
-                    db.collection('watchlist').doc(asset).delete();
+            window.handleDeleteForwardTest = (id) => {
+                if(confirm(`Yakin ingin menghapus data forward test ini?`)) {
+                    db.collection('forward_testing').doc(id).delete();
                 }
             };
             
@@ -988,6 +1045,10 @@
             setupEventListeners();
             initializeAndSyncData();
             updateThemeUI(localStorage.getItem('theme') || 'dark-mode');
+            // Set default date for forward test form
+            if(document.getElementById('ft-tanggal')) {
+                document.getElementById('ft-tanggal').value = new Date().toISOString().split('T')[0];
+            }
         });
     </script>
 </body>
