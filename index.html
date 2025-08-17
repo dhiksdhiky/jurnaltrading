@@ -8,14 +8,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-    <!-- DataTables CSS -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css">
-    <!-- jQuery -->
     <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.7.0.js"></script>
-    <!-- DataTables JS -->
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script>
     
     <style>
@@ -351,7 +347,8 @@
                                         <th>TP 1</th>
                                         <th>TP 2</th>
                                         <th>SL</th>
-                                        <th>Harga Saat Ini</th>
+                                        <th>Harga Sekarang</th>
+                                        <th>+/- (%)</th>
                                         <th>Status</th>
                                         <th>Aksi</th>
                                     </tr>
@@ -394,7 +391,6 @@
         <div id="fab-add-transaction" class="fab">+</div>
     </div>
     
-    <!-- Modals -->
     <div id="transaction-modal" class="modal"><div class="modal-content"><span class="modal-close">&times;</span><h2 id="modal-title"></h2><form id="transaction-form"><input type="hidden" id="edit-id"><div class="form-grid"><div class="form-group"><label for="tanggal">Tanggal</label><input type="date" id="tanggal" required></div><div class="form-group"><label for="tipe">Tipe</label><select id="tipe" required><option value="Beli">Beli</option><option value="Jual">Jual</option><option value="Dividen">Dividen</option></select></div></div><div class="form-group full-width" id="group-aset"><label for="aset">Kode Aset</label><input type="text" id="aset" placeholder="Contoh: BBCA" style="text-transform:uppercase" required></div><div id="trade-fields"><div class="form-grid"><div class="form-group"><label for="lot">Jumlah Lot/Unit</label><input type="number" step="any" id="lot" placeholder="10" required></div><div class="form-group"><label for="harga">Harga /Lembar</label><input type="number" step="any" id="harga" placeholder="9000" required></div></div><div class="form-group full-width" id="group-biaya"><label for="biaya">Biaya Transaksi (Default 0)</label><input type="number" step="any" id="biaya" placeholder="0"></div></div><div class="form-group full-width" id="group-dividen" style="display:none;"><label for="dividen-amount">Jumlah Dividen (Net)</label><input type="number" id="dividen-amount" placeholder="100000"></div><div class="form-group full-width"><label for="keterangan">Keterangan</label><textarea id="keterangan" rows="2"></textarea></div><button type="submit" id="submit-button"></button></form></div></div>
     <div id="pl-detail-modal" class="modal"><div class="modal-content modal-lg"><span class="modal-close">&times;</span><h2>Detail Realisasi Profit/Loss</h2><div id="pl-detail-grid" class="modal-body pl-detail-grid"></div></div></div>
     <div id="recap-modal" class="modal"><div class="modal-content modal-lg"><span class="modal-close">&times;</span><h2 id="recap-asset-code"></h2><div class="modal-body"><table id="recap-table"><thead><tr><th>Tanggal</th><th>Tipe</th><th>Lot/Unit</th><th>Harga</th><th>Nilai</th></tr></thead><tbody></tbody><tfoot></tfoot></table></div></div></div>
@@ -462,6 +458,7 @@
                 deleteSelectedBtn: document.getElementById('delete-selected-btn'),
                 portfolioTable: { body: document.querySelector("#portfolio-table tbody"), foot: document.querySelector("#portfolio-table tfoot") },
                 // Forward Test UI
+                refreshPortfolioBtn: document.getElementById('refresh-portfolio-btn'), // Added for consistency
                 refreshForwardTestBtn: document.getElementById('refresh-forward-test-btn'),
                 forwardTestForm: document.getElementById('forward-test-form'),
                 forwardTestTableBody: document.querySelector('#forward-test-table tbody'),
@@ -667,10 +664,11 @@
                 ui.portfolioTable.body.innerHTML = ''; 
                 data.forEach(item => {
                     const currentPriceData = marketData[item.aset] || {};
-                    const price = currentPriceData.close || 0;
-                    const change = currentPriceData.change || 0;
-                    const changePercent = currentPriceData.change_p || 0;
-                    const changeClass = change >= 0 ? 'profit' : 'loss';
+                    const price = currentPriceData.close || item.avgPriceBeli; // Use avg price if no market data
+                    const currentValue = item.sisaLot * 100 * price;
+                    const pl = currentValue - item.totalModal;
+                    const plPercent = item.totalModal > 0 ? (pl / item.totalModal) * 100 : 0;
+                    const changeClass = pl >= 0 ? 'profit' : 'loss';
 
                     ui.portfolioTable.body.innerHTML += `
                     <tr>
@@ -679,8 +677,8 @@
                         <td data-label="Avg. Price">${formatCurrency(item.avgPriceBeli, false)}</td>
                         <td data-label="Modal">${formatCurrency(item.totalModal, false)}</td>
                         <td data-label="Harga Saat Ini">${price > 0 ? formatCurrency(price, false) : '-'}</td>
-                        <td data-label="+/- (Rp)" class="${changeClass}">${price > 0 ? formatCurrency(change, false) : '-'}</td>
-                        <td data-label="+/- (%)" class="${changeClass}">${price > 0 ? changePercent.toFixed(2) + '%' : '-'}</td>
+                        <td data-label="+/- (Rp)" class="${changeClass}">${price > 0 ? formatCurrency(pl, false) : '-'}</td>
+                        <td data-label="+/- (%)" class="${changeClass}">${price > 0 ? plPercent.toFixed(2) + '%' : '-'}</td>
                     </tr>`;
                 });
             }
@@ -696,17 +694,13 @@
                     let statusClass = 'status-running';
 
                     if (currentPrice > 0) {
-                        if (item.tp2 && currentPrice >= item.tp2) {
-                            status = 'TP 2 Hit';
-                            statusClass = 'status-tp2';
-                        } else if (item.tp1 && currentPrice >= item.tp1) {
-                            status = 'TP 1 Hit';
-                            statusClass = 'status-tp1';
-                        } else if (item.sl && currentPrice <= item.sl) {
-                            status = 'SL Hit';
-                            statusClass = 'status-sl';
-                        }
+                        if (item.tp2 && currentPrice >= item.tp2) { status = 'TP 2 Hit'; statusClass = 'status-tp2'; } 
+                        else if (item.tp1 && currentPrice >= item.tp1) { status = 'TP 1 Hit'; statusClass = 'status-tp1'; } 
+                        else if (item.sl && currentPrice <= item.sl) { status = 'SL Hit'; statusClass = 'status-sl'; }
                     }
+
+                    const percentageChange = currentPrice > 0 && item.harga > 0 ? ((currentPrice - item.harga) / item.harga) * 100 : 0;
+                    const percentageChangeClass = percentageChange >= 0 ? 'profit' : 'loss';
 
                     ui.forwardTestTableBody.innerHTML += `
                         <tr>
@@ -714,9 +708,10 @@
                             <td data-label="Tgl. Input">${item.tanggal}</td>
                             <td data-label="Harga Input">${formatCurrency(item.harga, false)}</td>
                             <td data-label="TP 1">${formatCurrency(item.tp1, false)}</td>
-                            <td data-label="TP 2">${formatCurrency(item.tp2, false)}</td>
+                            <td data-label="TP 2">${item.tp2 ? formatCurrency(item.tp2, false) : '-'}</td>
                             <td data-label="SL">${formatCurrency(item.sl, false)}</td>
-                            <td data-label="Harga Saat Ini">${currentPrice > 0 ? formatCurrency(currentPrice, false) : '-'}</td>
+                            <td data-label="Harga Sekarang">${currentPrice > 0 ? formatCurrency(currentPrice, false) : '-'}</td>
+                            <td data-label="+/- (%)" class="${percentageChangeClass}">${currentPrice > 0 ? percentageChange.toFixed(2) + '%' : '-'}</td>
                             <td data-label="Status"><span class="${statusClass}">${status}</span></td>
                             <td data-label="Aksi" class="action-buttons">
                                 <button class="btn-delete" onclick="handleDeleteForwardTest('${item.id}')">Hapus</button>
@@ -740,6 +735,13 @@
                         .then(res => res.json())
                         .then(data => {
                             if (data && data.code && data.close !== undefined) {
+                                // Update local state immediately for faster UI response
+                                marketData[data.code.replace('.JK', '')] = {
+                                    close: data.close,
+                                    change: data.change,
+                                    change_p: data.change_p,
+                                };
+                                // Update Firestore in the background
                                 return db.collection('marketData').doc(data.code.replace('.JK', '')).set({
                                     close: data.close,
                                     change: data.change,
@@ -753,6 +755,7 @@
                 });
 
                 await Promise.all(promises);
+                processAndRenderAll(); // Force re-render immediately after all fetches complete
                 button.classList.remove('loading');
             }
             
@@ -797,7 +800,7 @@
 
             function updateThemeUI(theme) {
                 document.body.className = theme === 'light-mode' ? 'light-mode' : '';
-                if (ui.themeText) ui.themeText.textContent = theme === 'light-mode' ? 'Light Mode' : 'Dark Mode';
+                if (ui.themeText) ui.themeText.textContent = theme === 'light-mode' ? 'Mode Terang' : 'Mode Gelap';
                 if (lastAnalysisResult) {
                     renderEquityChart(lastAnalysisResult.equityData);
                     renderAllocationChart(lastAnalysisResult.portfolioData);
