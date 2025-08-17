@@ -8,10 +8,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <!-- DataTables CSS -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css">
+    <!-- jQuery -->
     <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <!-- DataTables JS -->
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script>
     
     <style>
@@ -126,8 +130,7 @@
         .pl-section { grid-column: 4 / 5; }
         .chart-section { grid-column: 1 / -1; }
         .history-section { grid-column: 1 / -1; }
-        .main-section { grid-column: 1 / -1; }
-
+        
         table.dataTable { width: 100% !important; border-collapse: collapse !important; table-layout: fixed; margin-top: 15px !important; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         th:first-child, td:first-child { width: 40px; text-align: center; padding: 10px 0; }
@@ -194,9 +197,13 @@
         .paginate_button:hover { background: var(--primary-color) !important; border-color: var(--border-color) !important; }
         
         /* Forward Test Styles */
-        .forward-test-form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; align-items: flex-end; margin-bottom: 15px; }
-        .forward-test-form-grid .form-group { margin-bottom: 0; }
-        .forward-test-form-grid button { grid-column: 3; justify-self: start; height: 42px; }
+        #forward-test-page .page-container {
+            grid-template-columns: 2fr 1fr;
+            align-items: flex-start;
+        }
+        .ft-form-container { position: sticky; top: 80px; }
+        .forward-test-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .forward-test-form-grid .full-width { grid-column: 1 / -1; }
         .status-tp1, .status-tp2 { color: var(--success-color); font-weight: 600; }
         .status-sl { color: var(--danger-color); font-weight: 600; }
         .status-running { color: var(--warning-color); }
@@ -204,10 +211,16 @@
 
         @media (max-width: 1400px) { .grid-container, .page-container, .stat-grid { grid-template-columns: repeat(4, 1fr); } }
         
+        @media (max-width: 1200px) {
+             #forward-test-page .page-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
         @media (max-width: 900px) { 
             .grid-container, .page-container, .chart-container, .settings-container, .stat-grid, .tools-container { display: flex; flex-direction: column; } 
             .forward-test-form-grid { grid-template-columns: 1fr; }
-            .forward-test-form-grid button { justify-self: stretch; }
+            .forward-test-form-grid button { justify-self: stretch; grid-column: 1; }
 
             .responsive-table thead { display: none; }
             .responsive-table tr { display: block; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 15px; padding: 15px; }
@@ -321,42 +334,53 @@
             
             <div id="forward-test-page" class="page-content">
                 <div class="page-container">
-                    <section class="card main-section">
-                        <div class="card-header">
-                            <h2>Forward Testing Rekomendasi</h2>
-                             <button id="refresh-forward-test-btn" class="button btn-refresh"><i class="fas fa-sync"></i><i class="fas fa-spinner fa-spin"></i></button>
-                        </div>
-                        <form id="forward-test-form">
-                            <div class="forward-test-form-grid">
-                                <div class="form-group"><label>Kode</label><input type="text" id="ft-kode" placeholder="BBCA" style="text-transform:uppercase" required></div>
-                                <div class="form-group"><label>Tgl. Input</label><input type="date" id="ft-tanggal" required></div>
-                                <div class="form-group"><label>Harga Input</label><input type="number" id="ft-harga" placeholder="9000" required></div>
-                                <div class="form-group"><label>TP 1</label><input type="number" id="ft-tp1" placeholder="9500" required></div>
-                                <div class="form-group"><label>TP 2</label><input type="number" id="ft-tp2" placeholder="10000"></div>
-                                <div class="form-group"><label>Stop Loss</label><input type="number" id="ft-sl" placeholder="8800" required></div>
+                    <div class="ft-table-container">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Hasil Forward Testing</h2>
+                                <button id="refresh-forward-test-btn" class="button btn-refresh"><i class="fas fa-sync"></i><i class="fas fa-spinner fa-spin"></i></button>
                             </div>
-                             <button type="submit" class="button">Tambah Rekomendasi</button>
-                        </form>
-                        <div class="table-responsive-wrapper" style="margin-top: 20px;">
-                             <table id="forward-test-table" class="responsive-table">
-                                <thead>
-                                    <tr>
-                                        <th>Kode</th>
-                                        <th>Tgl. Input</th>
-                                        <th>Harga Input</th>
-                                        <th>TP 1</th>
-                                        <th>TP 2</th>
-                                        <th>SL</th>
-                                        <th>Harga Sekarang</th>
-                                        <th>+/- (%)</th>
-                                        <th>Status</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
+                            <div class="table-responsive-wrapper">
+                                <table id="forward-test-table" class="responsive-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Kode</th>
+                                            <th>Tgl. Input</th>
+                                            <th>Harga Input</th>
+                                            <th>TP 1</th>
+                                            <th>TP 2</th>
+                                            <th>SL</th>
+                                            <th>Harga Sekarang</th>
+                                            <th>+/- (%)</th>
+                                            <th>Status</th>
+                                            <th>Keterangan</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
                         </div>
-                    </section>
+                    </div>
+                    <div class="ft-form-container">
+                        <div class="card">
+                             <div class="card-header">
+                                <h2>Input Rekomendasi Baru</h2>
+                            </div>
+                            <form id="forward-test-form">
+                                <div class="forward-test-form-grid">
+                                    <div class="form-group full-width"><label>Kode</label><input type="text" id="ft-kode" placeholder="BBCA" style="text-transform:uppercase" required></div>
+                                    <div class="form-group"><label>Tgl. Input</label><input type="date" id="ft-tanggal" required></div>
+                                    <div class="form-group"><label>Harga Input</label><input type="number" id="ft-harga" placeholder="9000" required></div>
+                                    <div class="form-group"><label>TP 1</label><input type="number" id="ft-tp1" placeholder="9500" required></div>
+                                    <div class="form-group"><label>TP 2</label><input type="number" id="ft-tp2" placeholder="10000"></div>
+                                    <div class="form-group full-width"><label>Stop Loss</label><input type="number" id="ft-sl" placeholder="8800" required></div>
+                                    <div class="form-group full-width"><label>Keterangan</label><textarea id="ft-keterangan" rows="3" placeholder="Alasan atau strategi"></textarea></div>
+                                </div>
+                                <button type="submit" class="button" style="width: 100%; margin-top: 15px;">Tambah Rekomendasi</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -391,6 +415,7 @@
         <div id="fab-add-transaction" class="fab">+</div>
     </div>
     
+    <!-- Modals -->
     <div id="transaction-modal" class="modal"><div class="modal-content"><span class="modal-close">&times;</span><h2 id="modal-title"></h2><form id="transaction-form"><input type="hidden" id="edit-id"><div class="form-grid"><div class="form-group"><label for="tanggal">Tanggal</label><input type="date" id="tanggal" required></div><div class="form-group"><label for="tipe">Tipe</label><select id="tipe" required><option value="Beli">Beli</option><option value="Jual">Jual</option><option value="Dividen">Dividen</option></select></div></div><div class="form-group full-width" id="group-aset"><label for="aset">Kode Aset</label><input type="text" id="aset" placeholder="Contoh: BBCA" style="text-transform:uppercase" required></div><div id="trade-fields"><div class="form-grid"><div class="form-group"><label for="lot">Jumlah Lot/Unit</label><input type="number" step="any" id="lot" placeholder="10" required></div><div class="form-group"><label for="harga">Harga /Lembar</label><input type="number" step="any" id="harga" placeholder="9000" required></div></div><div class="form-group full-width" id="group-biaya"><label for="biaya">Biaya Transaksi (Default 0)</label><input type="number" step="any" id="biaya" placeholder="0"></div></div><div class="form-group full-width" id="group-dividen" style="display:none;"><label for="dividen-amount">Jumlah Dividen (Net)</label><input type="number" id="dividen-amount" placeholder="100000"></div><div class="form-group full-width"><label for="keterangan">Keterangan</label><textarea id="keterangan" rows="2"></textarea></div><button type="submit" id="submit-button"></button></form></div></div>
     <div id="pl-detail-modal" class="modal"><div class="modal-content modal-lg"><span class="modal-close">&times;</span><h2>Detail Realisasi Profit/Loss</h2><div id="pl-detail-grid" class="modal-body pl-detail-grid"></div></div></div>
     <div id="recap-modal" class="modal"><div class="modal-content modal-lg"><span class="modal-close">&times;</span><h2 id="recap-asset-code"></h2><div class="modal-body"><table id="recap-table"><thead><tr><th>Tanggal</th><th>Tipe</th><th>Lot/Unit</th><th>Harga</th><th>Nilai</th></tr></thead><tbody></tbody><tfoot></tfoot></table></div></div></div>
@@ -713,6 +738,7 @@
                             <td data-label="Harga Sekarang">${currentPrice > 0 ? formatCurrency(currentPrice, false) : '-'}</td>
                             <td data-label="+/- (%)" class="${percentageChangeClass}">${currentPrice > 0 ? percentageChange.toFixed(2) + '%' : '-'}</td>
                             <td data-label="Status"><span class="${statusClass}">${status}</span></td>
+                            <td data-label="Keterangan" style="white-space: normal;">${item.keterangan || ''}</td>
                             <td data-label="Aksi" class="action-buttons">
                                 <button class="btn-delete" onclick="handleDeleteForwardTest('${item.id}')">Hapus</button>
                             </td>
@@ -768,6 +794,7 @@
                     tp1: parseFloat(document.getElementById('ft-tp1').value),
                     tp2: parseFloat(document.getElementById('ft-tp2').value) || null,
                     sl: parseFloat(document.getElementById('ft-sl').value),
+                    keterangan: document.getElementById('ft-keterangan').value,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
