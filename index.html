@@ -103,7 +103,8 @@
             font-size: 1.2em; /* Slightly smaller */
         }
 
-        .pl-summary .pl-item { margin-bottom: 10px; }
+        .pl-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .pl-summary .pl-item { text-align: center; }
         .pl-summary h4 { margin: 0 0 4px 0; font-size: 0.8em; color: var(--font-color-muted); }
         .pl-summary .pl-value { font-size: 1.2em; font-weight: 500; }
 
@@ -126,8 +127,9 @@
         .btn-refresh.loading .fa-sync { display: none; }
 
         .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; grid-column: 1 / -1; margin-bottom: 20px; }
-        .portfolio-section { grid-column: 1 / 4; }
-        .pl-section { grid-column: 4 / 5; }
+        /* --- PERUBAHAN: Lebar kolom portofolio dan ringkasan --- */
+        .portfolio-section { grid-column: 1 / 3; }
+        .pl-section { grid-column: 3 / 5; }
         .chart-section { grid-column: 1 / -1; }
         .history-section { grid-column: 1 / -1; }
         
@@ -316,7 +318,26 @@
                             </table>
                         </div>
                     </section>
-                    <section class="card pl-section"><div class="card-header"><h2>Ringkasan Realisasi</h2><button id="view-pl-detail-btn" class="button btn-detail">Detail</button></div><div class="pl-summary"><div class="pl-item"><h4>Total Untung</h4><div class="pl-value profit" id="total-profit-value">-</div></div><div class="pl-item"><h4>Total Rugi</h4><div class="pl-value loss" id="total-loss-value">-</div></div></div></section>
+                    <!-- --- PERUBAHAN: Menambahkan elemen untuk P/L per bulan --- -->
+                    <section class="card pl-section">
+                        <div class="card-header">
+                            <h2>Ringkasan Realisasi</h2>
+                            <button id="view-pl-detail-btn" class="button btn-detail">Detail</button>
+                        </div>
+                        <div class="pl-summary">
+                            <div class="pl-item">
+                                <h4>Total Untung</h4>
+                                <div class="pl-value profit" id="total-profit-value">-</div>
+                            </div>
+                            <div class="pl-item">
+                                <h4>Total Rugi</h4>
+                                <div class="pl-value loss" id="total-loss-value">-</div>
+                            </div>
+                        </div>
+                        <div id="monthly-pl-summary" style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                            <!-- Data P/L per bulan akan ditampilkan di sini oleh JavaScript -->
+                        </div>
+                    </section>
                     <section class="card chart-section"><div class="card-header"><h2>Visualisasi Data</h2></div><div class="chart-container"><div class="chart-wrapper"><canvas id="equityChart"></canvas></div><div class="chart-wrapper"><canvas id="assetAllocationChart"></canvas></div></div></section>
                     <section class="card history-section">
                         <div class="card-header">
@@ -580,6 +601,8 @@
                 renderStatCards(lastAnalysisResult);
                 renderPortfolioTable(lastAnalysisResult.portfolioData);
                 renderPLSummary(lastAnalysisResult.totalProfit, lastAnalysisResult.totalLoss);
+                // --- PERUBAHAN: Memanggil fungsi render P/L bulanan ---
+                renderMonthlyPLSummary(lastAnalysisResult.monthlyPL);
                 if(ui.viewPlDetailBtn) ui.viewPlDetailBtn.onclick = () => renderPLDetailModal(lastAnalysisResult.plData);
                 renderHistoryTable(allTransactions);
                 renderEquityChart(lastAnalysisResult.equityData);
@@ -592,6 +615,8 @@
                 const groupedByAset = transactions.reduce((acc, t) => { (acc[t.aset] = acc[t.aset] || []).push(t); return acc; }, {});
                 let portfolioData = [], plData = [], totalPortfolioModal = 0, currentPortfolioValue = 0, totalRealizedPL = 0, winningTrades = 0, losingTrades = 0, totalProfit = 0, totalLoss = 0, bestTrade = 0, worstTrade = 0;
                 let totalHoldingDays = 0, totalLotsSold = 0, cashBalance = initialCapital, tradeDetails = [];
+                // --- PERUBAHAN: Menambahkan objek untuk P/L bulanan ---
+                const monthlyPL = {};
 
                 cashflows.forEach(cf => { cashBalance += cf.tipe === 'Setor' ? cf.jumlah : -cf.jumlah; });
                 transactions.forEach(tx => {
@@ -641,7 +666,14 @@
                 
                 let cumulativePL = 0; const equityData = [];
                 [...allTransactions].sort((a,b) => new Date(a.tanggal) - new Date(b.tanggal)).forEach(tx => {
-                    if (tx.tipe !== 'Beli') { cumulativePL += getRealizedPLForTx(tx, allTransactions); equityData.push({ date: tx.tanggal, pnl: cumulativePL }); }
+                    if (tx.tipe !== 'Beli') { 
+                        const pl = getRealizedPLForTx(tx, allTransactions);
+                        cumulativePL += pl;
+                        equityData.push({ date: tx.tanggal, pnl: cumulativePL }); 
+                        // --- PERUBAHAN: Menghitung P/L per bulan ---
+                        const monthYear = tx.tanggal.substring(0, 7); // Format: YYYY-MM
+                        monthlyPL[monthYear] = (monthlyPL[monthYear] || 0) + pl;
+                    }
                 });
                 
                 const winRate = (winningTrades + losingTrades > 0) ? (winningTrades / (winningTrades + losingTrades)) * 100 : 0;
@@ -650,7 +682,7 @@
                 const unrealizedPL = currentPortfolioValue - totalPortfolioModal;
                 const unrealizedPLPercentage = totalPortfolioModal > 0 ? (unrealizedPL / totalPortfolioModal) * 100 : 0;
                 
-                return { portfolioData, plData, equityData, totalPortfolioModal, currentPortfolioValue, unrealizedPLPercentage, rdnCash: cashBalance, totalRealizedPL, winRate, profitFactor, totalProfit, totalLoss, bestTrade, worstTrade, avgHold, tradeDetails };
+                return { portfolioData, plData, equityData, totalPortfolioModal, currentPortfolioValue, unrealizedPLPercentage, rdnCash: cashBalance, totalRealizedPL, winRate, profitFactor, totalProfit, totalLoss, bestTrade, worstTrade, avgHold, tradeDetails, monthlyPL };
             }
 
             // --- RENDER FUNCTIONS ---
@@ -859,6 +891,37 @@
                 if(!ui.plSummary.profit || !ui.plSummary.loss) return;
                 ui.plSummary.profit.textContent = formatCurrency(profit);
                 ui.plSummary.loss.textContent = formatCurrency(Math.abs(loss));
+            }
+
+            // --- PERUBAHAN: Fungsi baru untuk menampilkan P/L per bulan ---
+            function renderMonthlyPLSummary(monthlyData) {
+                const container = document.getElementById('monthly-pl-summary');
+                if (!container) return;
+                container.innerHTML = '<h4 style="text-align: center; margin-bottom: 10px; font-size: 0.8em; color: var(--font-color-muted);">P/L PER BULAN</h4>';
+                const sortedMonths = Object.keys(monthlyData).sort().reverse(); // Urutkan dari bulan terbaru
+
+                if (sortedMonths.length === 0) {
+                    container.innerHTML += '<p style="font-size: 0.8em; color: var(--font-color-muted); text-align: center;">Belum ada data.</p>';
+                    return;
+                }
+
+                let listHTML = '<div style="max-height: 100px; overflow-y: auto; padding-right: 5px;">';
+                sortedMonths.forEach(month => {
+                    const pl = monthlyData[month];
+                    const plClass = pl >= 0 ? 'profit' : 'loss';
+                    // Gunakan tanggal 2 untuk menghindari masalah zona waktu
+                    const date = new Date(month + '-02T00:00:00'); 
+                    const monthName = date.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+                    
+                    listHTML += `
+                        <div style="display: flex; justify-content: space-between; font-size: 0.9em; margin-bottom: 5px; padding: 2px 0;">
+                            <span>${monthName}</span>
+                            <span class="${plClass}" style="font-weight: 600;">${formatCurrency(pl)}</span>
+                        </div>
+                    `;
+                });
+                listHTML += '</div>';
+                container.innerHTML += listHTML;
             }
 
             function renderHistoryTable(transactions) {
