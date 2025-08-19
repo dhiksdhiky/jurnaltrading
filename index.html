@@ -127,7 +127,6 @@
         .btn-refresh.loading .fa-sync { display: none; }
 
         .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; grid-column: 1 / -1; margin-bottom: 20px; }
-        /* --- PERUBAHAN: Lebar kolom portofolio dan ringkasan --- */
         .portfolio-section { grid-column: 1 / 3; }
         .pl-section { grid-column: 3 / 5; }
         .chart-section { grid-column: 1 / -1; }
@@ -239,11 +238,11 @@
             .responsive-table td.action-buttons, .responsive-table td[data-label="Pilih"] { justify-content: center; }
             .responsive-table td.action-buttons::before, .responsive-table td[data-label="Pilih"]::before { display: none; }
             
-            #portfolio-table, #forward-test-table { border-collapse: separate; border-spacing: 0 15px; margin-top: 0 !important; }
-            #portfolio-table tbody tr, #forward-test-table tbody tr {
+            #portfolio-table, #forward-test-table, #monthly-pl-detail-table { border-collapse: separate; border-spacing: 0 15px; margin-top: 0 !important; }
+            #portfolio-table tbody tr, #forward-test-table tbody tr, #monthly-pl-detail-table tbody tr {
                 padding: 0; border: none; background-color: var(--primary-color); border-radius: 8px;
             }
-            #portfolio-table tbody td, #forward-test-table tbody td { background-color: var(--primary-color); padding: 15px; border: none; }
+            #portfolio-table tbody td, #forward-test-table tbody td, #monthly-pl-detail-table tbody td { background-color: var(--primary-color); padding: 15px; border: none; }
             .dataTables_wrapper .dataTables_paginate .paginate_button { padding: 0.4em 0.8em; }
             .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info { text-align: left; width: 100%; }
             .dataTables_wrapper .dataTables_filter input { width: 95%; }
@@ -318,7 +317,6 @@
                             </table>
                         </div>
                     </section>
-                    <!-- --- PERUBAHAN: Menambahkan elemen untuk P/L per bulan --- -->
                     <section class="card pl-section">
                         <div class="card-header">
                             <h2>Ringkasan Realisasi</h2>
@@ -335,7 +333,6 @@
                             </div>
                         </div>
                         <div id="monthly-pl-summary" style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 10px;">
-                            <!-- Data P/L per bulan akan ditampilkan di sini oleh JavaScript -->
                         </div>
                     </section>
                     <section class="card chart-section"><div class="card-header"><h2>Visualisasi Data</h2></div><div class="chart-container"><div class="chart-wrapper"><canvas id="equityChart"></canvas></div><div class="chart-wrapper"><canvas id="assetAllocationChart"></canvas></div></div></section>
@@ -441,6 +438,31 @@
     <div id="pl-detail-modal" class="modal"><div class="modal-content modal-lg"><span class="modal-close">&times;</span><h2>Detail Realisasi Profit/Loss</h2><div id="pl-detail-grid" class="modal-body pl-detail-grid"></div></div></div>
     <div id="recap-modal" class="modal"><div class="modal-content modal-lg"><span class="modal-close">&times;</span><h2 id="recap-asset-code"></h2><div class="modal-body"><table id="recap-table"><thead><tr><th>Tanggal</th><th>Tipe</th><th>Lot/Unit</th><th>Harga</th><th>Nilai</th></tr></thead><tbody></tbody><tfoot></tfoot></table></div></div></div>
     <div id="import-preview-modal" class="modal"><div class="modal-content modal-lg"><span class="modal-close">&times;</span><h2>Pratinjau Impor CSV</h2><p>Pastikan data di bawah ini benar sebelum melanjutkan.</p><div class="modal-body"><table id="import-preview-table"></table></div><div style="display:flex; gap:10px; margin-top:20px;"><button id="confirm-import-btn" class="button">Impor Data Ini</button><button id="cancel-import-btn" class="button secondary">Batal</button></div></div></div>
+    
+    <!-- --- PERUBAHAN: Menambahkan modal baru untuk detail P/L bulanan --- -->
+    <div id="monthly-pl-detail-modal" class="modal">
+        <div class="modal-content modal-lg">
+            <span class="modal-close">&times;</span>
+            <h2 id="monthly-pl-modal-title"></h2>
+            <div class="modal-body">
+                <div class="table-responsive-wrapper">
+                    <table id="monthly-pl-detail-table" class="responsive-table">
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Aset</th>
+                                <th>Tipe</th>
+                                <th>P/L Realisasi</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                        <tfoot></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -468,6 +490,7 @@
             // UI Elements
             const ui = {
                 transactionModal: document.getElementById('transaction-modal'), recapModal: document.getElementById('recap-modal'), plDetailModal: document.getElementById('pl-detail-modal'), importPreviewModal: document.getElementById('import-preview-modal'),
+                monthlyPlDetailModal: document.getElementById('monthly-pl-detail-modal'),
                 navSidebar: document.getElementById('nav-sidebar'), hamburgerMenu: document.querySelector('.hamburger-menu'),
                 navTabs: document.querySelectorAll('.nav-tab'), pages: document.querySelectorAll('.page-content'),
                 fab: document.getElementById('fab-add-transaction'), viewPlDetailBtn: document.getElementById('view-pl-detail-btn'),
@@ -601,7 +624,6 @@
                 renderStatCards(lastAnalysisResult);
                 renderPortfolioTable(lastAnalysisResult.portfolioData);
                 renderPLSummary(lastAnalysisResult.totalProfit, lastAnalysisResult.totalLoss);
-                // --- PERUBAHAN: Memanggil fungsi render P/L bulanan ---
                 renderMonthlyPLSummary(lastAnalysisResult.monthlyPL);
                 if(ui.viewPlDetailBtn) ui.viewPlDetailBtn.onclick = () => renderPLDetailModal(lastAnalysisResult.plData);
                 renderHistoryTable(allTransactions);
@@ -615,8 +637,8 @@
                 const groupedByAset = transactions.reduce((acc, t) => { (acc[t.aset] = acc[t.aset] || []).push(t); return acc; }, {});
                 let portfolioData = [], plData = [], totalPortfolioModal = 0, currentPortfolioValue = 0, totalRealizedPL = 0, winningTrades = 0, losingTrades = 0, totalProfit = 0, totalLoss = 0, bestTrade = 0, worstTrade = 0;
                 let totalHoldingDays = 0, totalLotsSold = 0, cashBalance = initialCapital, tradeDetails = [];
-                // --- PERUBAHAN: Menambahkan objek untuk P/L bulanan ---
                 const monthlyPL = {};
+                const monthlyPLTransactions = {}; 
 
                 cashflows.forEach(cf => { cashBalance += cf.tipe === 'Setor' ? cf.jumlah : -cf.jumlah; });
                 transactions.forEach(tx => {
@@ -670,9 +692,16 @@
                         const pl = getRealizedPLForTx(tx, allTransactions);
                         cumulativePL += pl;
                         equityData.push({ date: tx.tanggal, pnl: cumulativePL }); 
-                        // --- PERUBAHAN: Menghitung P/L per bulan ---
-                        const monthYear = tx.tanggal.substring(0, 7); // Format: YYYY-MM
+                        const monthYear = tx.tanggal.substring(0, 7);
                         monthlyPL[monthYear] = (monthlyPL[monthYear] || 0) + pl;
+                        
+                        if (!monthlyPLTransactions[monthYear]) {
+                            monthlyPLTransactions[monthYear] = [];
+                        }
+                        monthlyPLTransactions[monthYear].push({
+                            ...tx,
+                            realizedPL: pl 
+                        });
                     }
                 });
                 
@@ -682,7 +711,7 @@
                 const unrealizedPL = currentPortfolioValue - totalPortfolioModal;
                 const unrealizedPLPercentage = totalPortfolioModal > 0 ? (unrealizedPL / totalPortfolioModal) * 100 : 0;
                 
-                return { portfolioData, plData, equityData, totalPortfolioModal, currentPortfolioValue, unrealizedPLPercentage, rdnCash: cashBalance, totalRealizedPL, winRate, profitFactor, totalProfit, totalLoss, bestTrade, worstTrade, avgHold, tradeDetails, monthlyPL };
+                return { portfolioData, plData, equityData, totalPortfolioModal, currentPortfolioValue, unrealizedPLPercentage, rdnCash: cashBalance, totalRealizedPL, winRate, profitFactor, totalProfit, totalLoss, bestTrade, worstTrade, avgHold, tradeDetails, monthlyPL, monthlyPLTransactions };
             }
 
             // --- RENDER FUNCTIONS ---
@@ -721,7 +750,7 @@
                 ui.portfolioTable.body.innerHTML = ''; 
                 data.forEach(item => {
                     const currentPriceData = marketData[item.aset] || {};
-                    const price = currentPriceData.close || item.avgPriceBeli; // Use avg price if no market data
+                    const price = currentPriceData.close || item.avgPriceBeli; 
                     const currentValue = item.sisaLot * 100 * price;
                     const pl = currentValue - item.totalModal;
                     const plPercent = item.totalModal > 0 ? (pl / item.totalModal) * 100 : 0;
@@ -787,19 +816,17 @@
                 button.classList.add('loading');
                 const uniqueAssets = [...new Set(assetList)];
                 const promises = uniqueAssets.map(asset => {
-                    if (!asset) return Promise.resolve(); // Skip if asset is undefined/null
+                    if (!asset) return Promise.resolve();
                     const url = `https://eodhistoricaldata.com/api/real-time/${asset}.JK?api_token=${EOD_API_KEY}&fmt=json`;
                     return fetch(url)
                         .then(res => res.json())
                         .then(data => {
                             if (data && data.code && data.close !== undefined) {
-                                // Update local state immediately for faster UI response
                                 marketData[data.code.replace('.JK', '')] = {
                                     close: data.close,
                                     change: data.change,
                                     change_p: data.change_p,
                                 };
-                                // Update Firestore in the background
                                 return db.collection('marketData').doc(data.code.replace('.JK', '')).set({
                                     close: data.close,
                                     change: data.change,
@@ -813,7 +840,7 @@
                 });
 
                 await Promise.all(promises);
-                processAndRenderAll(); // Force re-render immediately after all fetches complete
+                processAndRenderAll();
                 button.classList.remove('loading');
             }
             
@@ -893,12 +920,11 @@
                 ui.plSummary.loss.textContent = formatCurrency(Math.abs(loss));
             }
 
-            // --- PERUBAHAN: Fungsi baru untuk menampilkan P/L per bulan ---
             function renderMonthlyPLSummary(monthlyData) {
                 const container = document.getElementById('monthly-pl-summary');
                 if (!container) return;
                 container.innerHTML = '<h4 style="text-align: center; margin-bottom: 10px; font-size: 0.8em; color: var(--font-color-muted);">P/L PER BULAN</h4>';
-                const sortedMonths = Object.keys(monthlyData).sort().reverse(); // Urutkan dari bulan terbaru
+                const sortedMonths = Object.keys(monthlyData).sort().reverse();
 
                 if (sortedMonths.length === 0) {
                     container.innerHTML += '<p style="font-size: 0.8em; color: var(--font-color-muted); text-align: center;">Belum ada data.</p>';
@@ -909,12 +935,12 @@
                 sortedMonths.forEach(month => {
                     const pl = monthlyData[month];
                     const plClass = pl >= 0 ? 'profit' : 'loss';
-                    // Gunakan tanggal 2 untuk menghindari masalah zona waktu
                     const date = new Date(month + '-02T00:00:00'); 
                     const monthName = date.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
                     
+                    // --- PERUBAHAN: Menambahkan onclick untuk memanggil modal ---
                     listHTML += `
-                        <div style="display: flex; justify-content: space-between; font-size: 0.9em; margin-bottom: 5px; padding: 2px 0;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.9em; margin-bottom: 5px; padding: 4px 2px; cursor: pointer; border-radius: 4px;" onclick="showMonthlyDetailModal('${month}')" onmouseover="this.style.backgroundColor='var(--primary-color)';" onmouseout="this.style.backgroundColor='transparent';">
                             <span>${monthName}</span>
                             <span class="${plClass}" style="font-weight: 600;">${formatCurrency(pl)}</span>
                         </div>
@@ -923,6 +949,51 @@
                 listHTML += '</div>';
                 container.innerHTML += listHTML;
             }
+            
+            // --- PERUBAHAN: Fungsi baru untuk menampilkan modal detail bulanan ---
+            window.showMonthlyDetailModal = (monthYear) => {
+                const modal = document.getElementById('monthly-pl-detail-modal');
+                const titleEl = document.getElementById('monthly-pl-modal-title');
+                const tableBody = document.querySelector('#monthly-pl-detail-table tbody');
+                const tableFoot = document.querySelector('#monthly-pl-detail-table tfoot');
+
+                if (!modal || !lastAnalysisResult || !lastAnalysisResult.monthlyPLTransactions) return;
+
+                const transactions = lastAnalysisResult.monthlyPLTransactions[monthYear] || [];
+                const totalPL = lastAnalysisResult.monthlyPL[monthYear] || 0;
+
+                const date = new Date(monthYear + '-02T00:00:00');
+                const monthName = date.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+                titleEl.textContent = `Detail Transaksi - ${monthName}`;
+
+                tableBody.innerHTML = '';
+                if (transactions.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="4">Tidak ada transaksi pada bulan ini.</td></tr>';
+                } else {
+                    transactions.forEach(tx => {
+                        const plClass = tx.realizedPL >= 0 ? 'profit' : 'loss';
+                        tableBody.innerHTML += `
+                            <tr>
+                                <td data-label="Tanggal">${tx.tanggal}</td>
+                                <td data-label="Aset">${tx.aset}</td>
+                                <td data-label="Tipe">${tx.tipe}</td>
+                                <td data-label="P/L Realisasi" class="${plClass}">${formatCurrency(tx.realizedPL)}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                
+                const totalPLClass = totalPL >= 0 ? 'profit' : 'loss';
+                tableFoot.innerHTML = `
+                    <tr>
+                        <td colspan="3" style="text-align: right; font-weight: bold;">Total P/L Bulan Ini</td>
+                        <td data-label="Total" class="${totalPLClass}" style="font-weight: bold;">${formatCurrency(totalPL)}</td>
+                    </tr>
+                `;
+
+                modal.style.display = 'flex';
+            };
+
 
             function renderHistoryTable(transactions) {
                 if(!ui.historyTable.table) return;
@@ -1138,7 +1209,6 @@
             setupEventListeners();
             initializeAndSyncData();
             updateThemeUI(localStorage.getItem('theme') || 'dark-mode');
-            // Set default date for forward test form
             if(document.getElementById('ft-tanggal')) {
                 document.getElementById('ft-tanggal').value = new Date().toISOString().split('T')[0];
             }
